@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useMemo } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import * as THREE from "three";
@@ -10,19 +11,19 @@ export default function Walls() {
   const walls = useMemo(() => {
     const material = new THREE.MeshStandardMaterial({ color: "#f8fafc" });
     
-    let backWall = new THREE.Mesh(new THREE.BoxGeometry(width + wallThickness * 2, wallHeight, wallThickness), material);
+    let backWall: THREE.Mesh<any, any> = new THREE.Mesh(new THREE.BoxGeometry(width + wallThickness * 2, wallHeight, wallThickness), material);
     backWall.position.set(0, wallHeight / 2, -depth / 2 - wallThickness / 2);
     backWall.updateMatrix();
 
-    let frontWall = new THREE.Mesh(new THREE.BoxGeometry(width + wallThickness * 2, wallHeight, wallThickness), material);
+    let frontWall: THREE.Mesh<any, any> = new THREE.Mesh(new THREE.BoxGeometry(width + wallThickness * 2, wallHeight, wallThickness), material);
     frontWall.position.set(0, wallHeight / 2, depth / 2 + wallThickness / 2);
     frontWall.updateMatrix();
 
-    let leftWall = new THREE.Mesh(new THREE.BoxGeometry(wallThickness, wallHeight, depth), material);
+    let leftWall: THREE.Mesh<any, any> = new THREE.Mesh(new THREE.BoxGeometry(wallThickness, wallHeight, depth), material);
     leftWall.position.set(-width / 2 - wallThickness / 2, wallHeight / 2, 0);
     leftWall.updateMatrix();
 
-    let rightWall = new THREE.Mesh(new THREE.BoxGeometry(wallThickness, wallHeight, depth), material);
+    let rightWall: THREE.Mesh<any, any> = new THREE.Mesh(new THREE.BoxGeometry(wallThickness, wallHeight, depth), material);
     rightWall.position.set(width / 2 + wallThickness / 2, wallHeight / 2, 0);
     rightWall.updateMatrix();
 
