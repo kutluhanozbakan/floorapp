@@ -24,6 +24,7 @@ export default function PlannerCanvas() {
       shadows
       onPointerMissed={() => selectFurniture(null)}
       className="w-full h-full cursor-crosshair"
+      style={{ touchAction: "none" }}
     >
       <Suspense fallback={null}>
         <CameraController />

@@ -3,10 +3,10 @@ import React from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import { generateId } from "@/utils/ids";
 import { FurnitureType } from "@/types/planner";
-import { Armchair, Bed, Table, Box, DoorOpen, LayoutPanelTop } from "lucide-react";
+import { Armchair, Bed, Table, Box, DoorOpen, LayoutPanelTop, X } from "lucide-react";
 
 export default function LeftPanel() {
-  const { addFurniture } = usePlannerStore();
+  const { addFurniture, isLeftPanelOpen, setLeftPanelOpen } = usePlannerStore();
 
   const handleAdd = (type: FurnitureType, name: string, scale: [number, number, number]) => {
     addFurniture({
@@ -18,6 +18,8 @@ export default function LeftPanel() {
       rotation: [0, 0, 0],
       scale,
     });
+    // On mobile, close the drawer so the user can see and drag the new item.
+    setLeftPanelOpen(false);
   };
 
   const furnitureOptions = [
@@ -31,27 +33,48 @@ export default function LeftPanel() {
   ];
 
   return (
-    <div className="w-64 bg-white border-r border-slate-200 flex flex-col h-full shadow-sm z-10 shrink-0">
-      <div className="p-4 border-b border-slate-100">
-        <h2 className="font-semibold text-slate-800 text-sm uppercase tracking-wider">Catalog</h2>
-      </div>
-      <div className="p-4 space-y-3 overflow-y-auto">
-        <p className="text-xs text-slate-500 mb-2">Click to add to scene</p>
-        <div className="grid grid-cols-2 gap-3">
-          {furnitureOptions.map((item) => (
-            <button
-              key={item.type}
-              onClick={() => handleAdd(item.type, item.name, item.scale)}
-              className="flex flex-col items-center justify-center p-3 border border-slate-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all group"
-            >
-              <div className="text-slate-600 group-hover:text-blue-600 transition-colors mb-2">
-                {item.icon}
-              </div>
-              <span className="text-xs font-medium text-slate-700">{item.name}</span>
-            </button>
-          ))}
+    <>
+      {/* Backdrop (mobile only) */}
+      {isLeftPanelOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-20 md:hidden"
+          onClick={() => setLeftPanelOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`fixed md:static top-14 bottom-0 md:top-auto md:bottom-auto left-0 z-30 w-64 max-w-[80vw] bg-white border-r border-slate-200 flex flex-col md:h-full shadow-lg md:shadow-sm shrink-0 transition-transform duration-300 md:transition-none ${
+          isLeftPanelOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0`}
+      >
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+          <h2 className="font-semibold text-slate-800 text-sm uppercase tracking-wider">Catalog</h2>
+          <button
+            onClick={() => setLeftPanelOpen(false)}
+            className="md:hidden text-slate-400 hover:text-slate-600 p-1"
+            aria-label="Close catalog"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
-      </div>
-    </div>
+        <div className="p-4 space-y-3 overflow-y-auto">
+          <p className="text-xs text-slate-500 mb-2">Tap to add to scene</p>
+          <div className="grid grid-cols-2 gap-3">
+            {furnitureOptions.map((item) => (
+              <button
+                key={item.type}
+                onClick={() => handleAdd(item.type, item.name, item.scale)}
+                className="flex flex-col items-center justify-center p-3 border border-slate-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 active:bg-blue-100 transition-all group"
+              >
+                <div className="text-slate-600 group-hover:text-blue-600 transition-colors mb-2">
+                  {item.icon}
+                </div>
+                <span className="text-xs font-medium text-slate-700">{item.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

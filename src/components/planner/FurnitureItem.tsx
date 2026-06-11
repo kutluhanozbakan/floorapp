@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { useThree, ThreeEvent } from "@react-three/fiber";
 import { useDrag } from "@use-gesture/react";
 import * as THREE from "three";
@@ -20,50 +20,66 @@ interface Props {
 
 export default function FurnitureItem({ item }: Props) {
   const meshRef = useRef<THREE.Group>(null);
-  const { camera } = useThree();
-  const { selectFurniture, selectedItemId, updateFurniture, currentMode, room } = usePlannerStore();
+  const { camera, gl } = useThree();
+  const { selectFurniture, selectedItemId, updateFurniture, room, setDraggingItem } = usePlannerStore();
   const [isHovered, setIsHovered] = useState(false);
-  
+
   const isSelected = selectedItemId === item.id;
 
-  const bind = useDrag(({ active, event, memo }) => {
-    // Basic drag logic via raycasting to a plane
-    const e = event as unknown as PointerEvent;
-    
-    // Stop event propagation so orbit controls doesn't interfere as much
-    if (active && currentMode === "2d") {
-      e.stopPropagation();
-    }
-    
-    if (!memo) {
-      memo = { position: new THREE.Vector3(...item.position) };
-      selectFurniture(item.id);
-    }
-    
-    if (active) {
-      const vec = new THREE.Vector3();
-      const pos = new THREE.Vector3();
-      vec.set(
-        (e.clientX / window.innerWidth) * 2 - 1,
-        -(e.clientY / window.innerHeight) * 2 + 1,
-        0.5
-      );
-      vec.unproject(camera);
-      vec.sub(camera.position).normalize();
-      const distance = -camera.position.y / vec.y;
-      pos.copy(camera.position).add(vec.multiplyScalar(distance));
-      
-      let targetX = pos.x;
-      let targetZ = pos.z;
+  // Reused across drag frames to avoid per-event allocations.
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const floorPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
+  const hitPoint = useMemo(() => new THREE.Vector3(), []);
+
+  const bind = useDrag(
+    ({ first, last, active, event, xy: [px, py], memo }) => {
+      // Keep the gesture from reaching OrbitControls / canvas deselect.
+      (event as { stopPropagation?: () => void })?.stopPropagation?.();
+
+      // Disable orbit/pan controls while a piece of furniture is being dragged
+      // so the camera doesn't fight the drag (CameraController applies the flag).
+      setDraggingItem(active);
+
+      if (first) {
+        selectFurniture(item.id);
+      }
+
+      // Convert the pointer position to normalized device coordinates using the
+      // canvas bounds (NOT the window) so dragging is accurate even though the
+      // canvas is inset by the side panels.
+      const rect = gl.domElement.getBoundingClientRect();
+      const ndcX = ((px - rect.left) / rect.width) * 2 - 1;
+      const ndcY = -((py - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera({ x: ndcX, y: ndcY } as THREE.Vector2, camera);
+      if (!raycaster.ray.intersectPlane(floorPlane, hitPoint)) {
+        return memo;
+      }
+
+      // On grab, remember the offset between the pointer and the item's origin so
+      // the item doesn't snap its center to the finger/cursor.
+      if (first || !memo) {
+        memo = {
+          offsetX: item.position[0] - hitPoint.x,
+          offsetZ: item.position[2] - hitPoint.z,
+        };
+      }
+
+      let targetX = hitPoint.x + memo.offsetX;
+      let targetZ = hitPoint.z + memo.offsetZ;
       let targetRotation = item.rotation;
 
       const snapDistance = 0.5;
       const isDoorOrWindow = item.type === "door" || item.type === "window";
-      
+
       const minX = -room.width / 2;
       const maxX = room.width / 2;
       const minZ = -room.depth / 2;
       const maxZ = room.depth / 2;
+
+      // Keep the item inside the room footprint.
+      targetX = Math.min(maxX, Math.max(minX, targetX));
+      targetZ = Math.min(maxZ, Math.max(minZ, targetZ));
 
       if (Math.abs(targetX - minX) < snapDistance) {
         targetX = minX;
@@ -81,17 +97,22 @@ export default function FurnitureItem({ item }: Props) {
 
       let targetY = item.position[1];
       if (isDoorOrWindow) {
-         targetY = item.scale[1] / 2;
+        targetY = item.scale[1] / 2;
       }
 
       updateFurniture(item.id, {
         position: [targetX, targetY, targetZ],
-        rotation: targetRotation as [number, number, number]
+        rotation: targetRotation as [number, number, number],
       });
-    }
 
-    return memo;
-  });
+      if (last) {
+        setDraggingItem(false);
+      }
+
+      return memo;
+    },
+    { filterTaps: true, pointer: { touch: true } }
+  );
 
   const renderGeometry = () => {
     switch (item.type) {

@@ -2,13 +2,14 @@
 import React, { useRef, useState, useEffect } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import { exportProjectToJson } from "@/utils/storage";
-import { Save, Download, Upload, Trash2, Box, Map, Smartphone } from "lucide-react";
+import { Save, Download, Upload, Trash2, Box, Map, Smartphone, PanelLeft, SlidersHorizontal, MoreVertical } from "lucide-react";
 
 export default function Toolbar() {
-  const { currentMode, setMode, saveProject, importProject, resetProject } = usePlannerStore();
+  const { currentMode, setMode, saveProject, importProject, resetProject, setLeftPanelOpen, setRightPanelOpen } = usePlannerStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isArModalOpen, setIsArModalOpen] = useState(false);
-  
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isArModalOpen) {
@@ -54,37 +55,53 @@ export default function Toolbar() {
     }
   };
 
+  const handleReset = () => {
+    if (confirm("Are you sure you want to reset the project? All unsaved progress will be lost.")) {
+      resetProject();
+    }
+  };
+
   return (
-    <div className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-10 shadow-sm">
-      <div className="flex items-center space-x-2">
-        <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-lg mr-2">
+    <div className="h-14 md:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-3 md:px-6 shrink-0 z-40 shadow-sm gap-2">
+      {/* Left: catalog toggle (mobile) + logo */}
+      <div className="flex items-center gap-2 min-w-0">
+        <button
+          onClick={() => setLeftPanelOpen(true)}
+          className="md:hidden flex items-center justify-center w-9 h-9 rounded-md text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+          aria-label="Open catalog"
+        >
+          <PanelLeft className="w-5 h-5" />
+        </button>
+        <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-base shrink-0">
           FP
         </div>
-        <h1 className="text-xl font-semibold tracking-tight text-slate-800">Floor Planner MVP</h1>
+        <h1 className="hidden sm:block text-lg md:text-xl font-semibold tracking-tight text-slate-800 truncate">Floor Planner</h1>
       </div>
 
-      <div className="flex items-center bg-slate-100 p-1 rounded-md">
+      {/* Center: 2D / 3D toggle */}
+      <div className="flex items-center bg-slate-100 p-1 rounded-md shrink-0">
         <button
           onClick={() => setMode("2d")}
-          className={`flex items-center px-4 py-1.5 rounded text-sm font-medium transition-colors ${
+          className={`flex items-center px-3 md:px-4 py-1.5 rounded text-sm font-medium transition-colors ${
             currentMode === "2d" ? "bg-white shadow-sm text-blue-600" : "text-slate-600 hover:text-slate-900"
           }`}
         >
-          <Map className="w-4 h-4 mr-2" />
-          2D Plan
+          <Map className="w-4 h-4 md:mr-2" />
+          <span className="hidden md:inline">2D Plan</span>
         </button>
         <button
           onClick={() => setMode("3d")}
-          className={`flex items-center px-4 py-1.5 rounded text-sm font-medium transition-colors ${
+          className={`flex items-center px-3 md:px-4 py-1.5 rounded text-sm font-medium transition-colors ${
             currentMode === "3d" ? "bg-white shadow-sm text-blue-600" : "text-slate-600 hover:text-slate-900"
           }`}
         >
-          <Box className="w-4 h-4 mr-2" />
-          3D View
+          <Box className="w-4 h-4 md:mr-2" />
+          <span className="hidden md:inline">3D View</span>
         </button>
       </div>
 
-      <div className="flex items-center space-x-3">
+      {/* Right: desktop actions */}
+      <div className="hidden md:flex items-center space-x-3">
         <button
           onClick={saveProject}
           className="flex items-center px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50 transition-colors"
@@ -93,7 +110,7 @@ export default function Toolbar() {
           <Save className="w-4 h-4 mr-1.5" />
           Save
         </button>
-        
+
         <div className="w-px h-6 bg-slate-300 mx-1"></div>
 
         <button
@@ -112,13 +129,6 @@ export default function Toolbar() {
           <Upload className="w-4 h-4 mr-1.5" />
           Import
         </button>
-        <input
-          type="file"
-          accept=".json"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-        />
 
         <div className="w-px h-6 bg-slate-300 mx-1"></div>
 
@@ -133,11 +143,7 @@ export default function Toolbar() {
         <div className="w-px h-6 bg-slate-300 mx-1"></div>
 
         <button
-          onClick={() => {
-            if (confirm("Are you sure you want to reset the project? All unsaved progress will be lost.")) {
-              resetProject();
-            }
-          }}
+          onClick={handleReset}
           className="flex items-center px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 transition-colors"
         >
           <Trash2 className="w-4 h-4 mr-1.5" />
@@ -145,9 +151,51 @@ export default function Toolbar() {
         </button>
       </div>
 
+      {/* Right: mobile actions (inspector toggle + overflow menu) */}
+      <div className="flex md:hidden items-center gap-1 shrink-0">
+        <button
+          onClick={() => setRightPanelOpen(true)}
+          className="flex items-center justify-center w-9 h-9 rounded-md text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+          aria-label="Open properties"
+        >
+          <SlidersHorizontal className="w-5 h-5" />
+        </button>
+        <div className="relative">
+          <button
+            onClick={() => setIsMenuOpen((v) => !v)}
+            className="flex items-center justify-center w-9 h-9 rounded-md text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+            aria-label="More actions"
+          >
+            <MoreVertical className="w-5 h-5" />
+          </button>
+
+          {isMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
+              <div className="absolute right-0 top-11 z-50 w-52 bg-white border border-slate-200 rounded-lg shadow-xl py-1 overflow-hidden">
+                <MenuItem icon={<Save className="w-4 h-4" />} label="Save" onClick={() => { saveProject(); setIsMenuOpen(false); }} />
+                <MenuItem icon={<Download className="w-4 h-4" />} label="Export JSON" onClick={() => { exportProjectToJson(usePlannerStore.getState()); setIsMenuOpen(false); }} />
+                <MenuItem icon={<Upload className="w-4 h-4" />} label="Import JSON" onClick={() => { handleImportClick(); setIsMenuOpen(false); }} />
+                <MenuItem icon={<Smartphone className="w-4 h-4 text-indigo-600" />} label="Connect AR" onClick={() => { setIsArModalOpen(true); setIsMenuOpen(false); }} />
+                <div className="my-1 border-t border-slate-100" />
+                <MenuItem icon={<Trash2 className="w-4 h-4" />} label="Reset" danger onClick={() => { setIsMenuOpen(false); handleReset(); }} />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <input
+        type="file"
+        accept=".json"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
       {isArModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-xl w-96 p-6">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-slate-800 flex items-center">
                 <Smartphone className="w-5 h-5 mr-2 text-indigo-600" />
@@ -157,16 +205,16 @@ export default function Toolbar() {
                 ✕
               </button>
             </div>
-            
+
             <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4 text-center">
               <p className="text-sm text-slate-600 mb-2">
                 Open the iOS Scanner app and enter this URL to send the scan:
               </p>
               <div className="font-mono text-sm font-bold text-slate-800 bg-white border border-slate-300 py-2 px-1 rounded break-all">
-                {typeof window !== 'undefined' ? `${window.location.origin}/api/ar` : '/api/ar'}
+                {typeof window !== "undefined" ? `${window.location.origin}/api/ar` : "/api/ar"}
               </div>
             </div>
-            
+
             <div className="flex items-center justify-center space-x-2 text-sm text-indigo-600 font-medium animate-pulse">
               <div className="w-2 h-2 rounded-full bg-indigo-600"></div>
               <span>Waiting for scan data...</span>
@@ -175,5 +223,29 @@ export default function Toolbar() {
         </div>
       )}
     </div>
+  );
+}
+
+function MenuItem({
+  icon,
+  label,
+  onClick,
+  danger,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-left transition-colors ${
+        danger ? "text-red-600 hover:bg-red-50" : "text-slate-700 hover:bg-slate-50"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }

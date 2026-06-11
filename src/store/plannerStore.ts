@@ -5,6 +5,12 @@ import { loadProjectFromStorage, saveProjectToStorage } from "@/utils/storage";
 type PlannerState = ProjectState & {
   currentMode: "2d" | "3d";
   selectedItemId: string | null;
+  isLeftPanelOpen: boolean;
+  isRightPanelOpen: boolean;
+  isDraggingItem: boolean;
+  setLeftPanelOpen: (open: boolean) => void;
+  setRightPanelOpen: (open: boolean) => void;
+  setDraggingItem: (dragging: boolean) => void;
   setMode: (mode: "2d" | "3d") => void;
   addFurniture: (item: FurnitureItem) => void;
   updateFurniture: (id: string, data: Partial<FurnitureItem>) => void;
@@ -33,6 +39,13 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   ...defaultState,
   currentMode: "2d",
   selectedItemId: null,
+  isLeftPanelOpen: false,
+  isRightPanelOpen: false,
+  isDraggingItem: false,
+
+  setLeftPanelOpen: (open) => set({ isLeftPanelOpen: open }),
+  setRightPanelOpen: (open) => set({ isRightPanelOpen: open }),
+  setDraggingItem: (dragging) => set({ isDraggingItem: dragging }),
 
   setMode: (mode) => set({ currentMode: mode }),
 

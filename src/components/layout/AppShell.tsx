@@ -6,11 +6,11 @@ import PlannerCanvas from "../planner/PlannerCanvas";
 
 export default function AppShell() {
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-50 text-slate-900 overflow-hidden font-sans">
+    <div className="flex flex-col h-dvh w-screen bg-slate-50 text-slate-900 overflow-hidden font-sans">
       <Toolbar />
-      <div className="flex flex-1 h-[calc(100vh-64px)]">
+      <div className="flex flex-1 min-h-0 relative">
         <LeftPanel />
-        <div className="flex-1 relative bg-slate-100 h-full">
+        <div className="flex-1 relative bg-slate-100 h-full min-w-0">
           <PlannerCanvas />
         </div>
         <RightInspector />

@@ -5,10 +5,17 @@ import { usePlannerStore } from "@/store/plannerStore";
 
 
 export default function CameraController() {
-  const { currentMode } = usePlannerStore();
+  const { currentMode, isDraggingItem } = usePlannerStore();
   const { camera } = useThree();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const controlsRef = useRef<any>(null);
+
+  // Pause camera controls while a furniture item is being dragged.
+  useEffect(() => {
+    if (controlsRef.current) {
+      controlsRef.current.enabled = !isDraggingItem;
+    }
+  }, [isDraggingItem]);
 
   useEffect(() => {
     if (controlsRef.current) {

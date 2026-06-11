@@ -1,17 +1,38 @@
 "use client";
 import React from "react";
 import { usePlannerStore } from "@/store/plannerStore";
+import { X } from "lucide-react";
 
 export default function RightInspector() {
-  const { room, updateRoom, furnitureItems, selectedItemId, updateFurniture, deleteFurniture } = usePlannerStore();
+  const { room, updateRoom, furnitureItems, selectedItemId, updateFurniture, deleteFurniture, isRightPanelOpen, setRightPanelOpen } = usePlannerStore();
 
   const selectedItem = furnitureItems.find((i) => i.id === selectedItemId);
 
   return (
-    <div className="w-80 bg-white border-l border-slate-200 flex flex-col h-full shadow-sm z-10 overflow-y-auto shrink-0">
-      <div className="p-4 border-b border-slate-200 bg-slate-50">
-        <h2 className="font-semibold text-slate-800 text-sm uppercase tracking-wider">Room Properties</h2>
-      </div>
+    <>
+      {/* Backdrop (mobile only) */}
+      {isRightPanelOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-20 md:hidden"
+          onClick={() => setRightPanelOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`fixed md:static top-14 bottom-0 md:top-auto md:bottom-auto right-0 z-30 w-80 max-w-[85vw] bg-white border-l border-slate-200 flex flex-col md:h-full shadow-lg md:shadow-sm overflow-y-auto shrink-0 transition-transform duration-300 md:transition-none ${
+          isRightPanelOpen ? "translate-x-0" : "translate-x-full"
+        } md:translate-x-0`}
+      >
+        <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+          <h2 className="font-semibold text-slate-800 text-sm uppercase tracking-wider">Room Properties</h2>
+          <button
+            onClick={() => setRightPanelOpen(false)}
+            className="md:hidden text-slate-400 hover:text-slate-600 p-1"
+            aria-label="Close inspector"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       <div className="p-4 space-y-4 border-b border-slate-200">
         <div>
           <label className="block text-xs font-medium text-slate-500 mb-1">Width (X) - meters</label>
@@ -159,6 +180,7 @@ export default function RightInspector() {
           Select an object in the scene to edit its properties.
         </div>
       )}
-    </div>
+      </aside>
+    </>
   );
 }
