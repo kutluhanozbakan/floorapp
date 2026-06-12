@@ -27,6 +27,14 @@ import Bathtub from "../furniture/Bathtub";
 import Stove from "../furniture/Stove";
 import Fridge from "../furniture/Fridge";
 import KitchenCabinet from "../furniture/KitchenCabinet";
+import Armchair from "../furniture/Armchair";
+import CoffeeTable from "../furniture/CoffeeTable";
+import TvUnit from "../furniture/TvUnit";
+import Dresser from "../furniture/Dresser";
+import WashingMachine from "../furniture/WashingMachine";
+import KitchenCounter from "../furniture/KitchenCounter";
+import Shower from "../furniture/Shower";
+import Mirror from "../furniture/Mirror";
 
 interface Props {
   item: FurnitureItemType;
@@ -216,6 +224,14 @@ export default function FurnitureItem({ item, room }: Props) {
       case "stove": return <Stove />;
       case "fridge": return <Fridge />;
       case "kitchen_cabinet": return <KitchenCabinet />;
+      case "armchair": return <Armchair />;
+      case "coffee_table": return <CoffeeTable />;
+      case "tv_unit": return <TvUnit />;
+      case "dresser": return <Dresser />;
+      case "washing_machine": return <WashingMachine />;
+      case "kitchen_counter": return <KitchenCounter />;
+      case "shower": return <Shower />;
+      case "mirror": return <Mirror />;
       default: return (
         <mesh>
           <boxGeometry args={[1, 1, 1]} />
@@ -228,6 +244,13 @@ export default function FurnitureItem({ item, room }: Props) {
   const dragProps = bind() as unknown as {
     onPointerDown?: (e: ThreeEvent<PointerEvent>) => void;
   } & Record<string, unknown>;
+
+  // Door/window/mirror are authored centered on the origin (they sit in a wall);
+  // everything else rests on the floor occupying local y ∈ [0, 1]. The selection
+  // and hit boxes follow suit so they wrap the actual model.
+  const centered = item.type === "door" || item.type === "window" || item.type === "mirror";
+  const boxCenterY = centered ? 0 : 0.5;
+  const labelY = (centered ? 0.5 : 1) + 0.15;
 
   return (
     <group
@@ -257,14 +280,14 @@ export default function FurnitureItem({ item, room }: Props) {
     >
       {/* Bounding box for selection highlight */}
       {(isSelected || isHovered) && (
-        <mesh>
+        <mesh position={[0, boxCenterY, 0]}>
           <boxGeometry args={[1.05, 1.05, 1.05]} />
-          <meshBasicMaterial color={isSelected ? "#3b82f6" : "#94a3b8"} wireframe />
+          <meshBasicMaterial color={isSelected ? "#526d5d" : "#a8a29e"} wireframe />
         </mesh>
       )}
 
       {/* Invisible hit box to make dragging easier on mobile */}
-      <mesh>
+      <mesh position={[0, boxCenterY, 0]}>
         <boxGeometry args={[1.2, 1.2, 1.2]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
@@ -274,7 +297,7 @@ export default function FurnitureItem({ item, room }: Props) {
 
       {/* Hover dimensions overlay */}
       {isHovered && !isDraggingItem && (
-        <Html position={[0, item.scale[1] / 2 + 0.2, 0]} center zIndexRange={[100, 0]} style={{ pointerEvents: "none" }}>
+        <Html position={[0, labelY, 0]} center zIndexRange={[100, 0]} style={{ pointerEvents: "none" }}>
           <div className="pointer-events-none select-none bg-slate-800/90 backdrop-blur-sm text-white px-3 py-1.5 rounded shadow-xl border border-slate-600/50 flex flex-col items-center">
             <div className="font-semibold text-xs mb-0.5 flex items-center gap-1">
               {item.isLocked && <span className="text-yellow-400">🔒</span>}

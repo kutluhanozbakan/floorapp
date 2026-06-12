@@ -3,10 +3,11 @@ import React from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import { generateId } from "@/utils/ids";
 import { FurnitureType } from "@/types/planner";
-import { 
+import {
   Armchair, Bed, Table, Box, DoorOpen, LayoutPanelTop, X,
   Tv, Library, Trees, Lightbulb, Grid3X3, Laptop,
-  Bath, Droplets, Flame, Refrigerator, Archive
+  Bath, Droplets, Flame, Refrigerator, Archive,
+  Sofa, Coffee, WashingMachine, ShowerHead, Square, CookingPot
 } from "lucide-react";
 
 export default function LeftPanel() {
@@ -17,7 +18,7 @@ export default function LeftPanel() {
     // else keeps y=0. Setting this on add (not just on drag) keeps the wall cut-out
     // at the right height immediately.
     let y = 0;
-    if (type === "window") y = 1.0 + scale[1] / 2;
+    if (type === "window" || type === "mirror") y = 1.0 + scale[1] / 2;
     else if (type === "door") y = scale[1] / 2;
 
     // Add to the first room or a selected room if we had a specific way.
@@ -69,6 +70,14 @@ export default function LeftPanel() {
     { type: "stove", name: "Ocak", icon: <Flame className="w-5 h-5" />, scale: [0.6, 0.9, 0.6] },
     { type: "fridge", name: "Buzdolabı", icon: <Refrigerator className="w-5 h-5" />, scale: [0.7, 1.8, 0.7] },
     { type: "kitchen_cabinet", name: "Mutfak Dolabı", icon: <Archive className="w-5 h-5" />, scale: [0.6, 0.9, 0.6] },
+    { type: "armchair", name: "Berjer", icon: <Sofa className="w-5 h-5 scale-90" />, scale: [0.9, 0.85, 0.9] },
+    { type: "coffee_table", name: "Sehpa", icon: <Coffee className="w-5 h-5" />, scale: [1.1, 0.45, 0.6] },
+    { type: "tv_unit", name: "TV Ünitesi", icon: <Tv className="w-5 h-5 scale-90" />, scale: [1.8, 0.5, 0.45] },
+    { type: "dresser", name: "Şifonyer", icon: <Box className="w-5 h-5" />, scale: [1.0, 0.9, 0.5] },
+    { type: "washing_machine", name: "Çamaşır Mak.", icon: <WashingMachine className="w-5 h-5" />, scale: [0.6, 0.85, 0.6] },
+    { type: "kitchen_counter", name: "Tezgah", icon: <CookingPot className="w-5 h-5" />, scale: [1.2, 0.9, 0.6] },
+    { type: "shower", name: "Duş", icon: <ShowerHead className="w-5 h-5" />, scale: [0.9, 2.1, 0.9] },
+    { type: "mirror", name: "Ayna", icon: <Square className="w-5 h-5" />, scale: [0.7, 1.0, 0.05] },
   ];
 
   return (

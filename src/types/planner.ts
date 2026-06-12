@@ -9,10 +9,12 @@ export type Room = {
   isLocked?: boolean;
 };
 
-export type FurnitureType = 
+export type FurnitureType =
   | "sofa" | "table" | "wardrobe" | "chair" | "bed" | "door" | "window"
   | "tv" | "bookshelf" | "plant" | "lamp" | "rug" | "desk" | "nightstand"
-  | "toilet" | "sink" | "bathtub" | "stove" | "fridge" | "kitchen_cabinet";
+  | "toilet" | "sink" | "bathtub" | "stove" | "fridge" | "kitchen_cabinet"
+  | "armchair" | "coffee_table" | "tv_unit" | "dresser" | "washing_machine"
+  | "kitchen_counter" | "shower" | "mirror";
 
 export type FurnitureItem = {
   id: string;
