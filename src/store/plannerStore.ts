@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import { FurnitureItem, ProjectState, Room } from "@/types/planner";
 import { loadProjectFromStorage, saveProjectToStorage } from "@/utils/storage";
+import { generateId } from "@/utils/ids";
 
 type HistorySnapshot = { rooms: Room[]; furnitureItems: FurnitureItem[] };
 
@@ -33,6 +34,8 @@ type PlannerState = ProjectState & {
   addFurniture: (item: FurnitureItem) => void;
   updateFurniture: (id: string, data: Partial<FurnitureItem>) => void;
   deleteFurniture: (id: string) => void;
+  duplicateFurniture: (id: string) => void;
+  nudgeFurniture: (id: string, dx: number, dz: number) => void;
   toggleFurnitureLock: (id: string) => void;
   selectFurniture: (id: string | null) => void; // Selects either a room or a furniture item
   saveProject: () => void;
@@ -168,6 +171,36 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
     set((state) => ({
       furnitureItems: state.furnitureItems.filter((item) => item.id !== id),
       selectedItemId: state.selectedItemId === id ? null : state.selectedItemId,
+    }));
+  },
+
+  duplicateFurniture: (id) => {
+    const original = get().furnitureItems.find((i) => i.id === id);
+    if (!original) return;
+    get().pushHistory();
+    const copy: FurnitureItem = {
+      ...original,
+      id: generateId(),
+      // Offset the copy slightly so it doesn't sit exactly on the original.
+      position: [original.position[0] + 0.3, original.position[1], original.position[2] + 0.3],
+      isLocked: false,
+    };
+    set((state) => ({
+      furnitureItems: [...state.furnitureItems, copy],
+      selectedItemId: copy.id,
+    }));
+  },
+
+  nudgeFurniture: (id, dx, dz) => {
+    const item = get().furnitureItems.find((i) => i.id === id);
+    if (!item || item.isLocked) return;
+    get().pushHistory();
+    set((state) => ({
+      furnitureItems: state.furnitureItems.map((i) =>
+        i.id === id
+          ? { ...i, position: [i.position[0] + dx, i.position[1], i.position[2] + dz] }
+          : i
+      ),
     }));
   },
 

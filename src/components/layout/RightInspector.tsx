@@ -3,10 +3,10 @@ import React, { useRef } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import { Button, IconButton, Input } from "@/components/ui";
 import { cn } from "@/utils/cn";
-import { X, Lock, Unlock, RotateCw } from "lucide-react";
+import { X, Lock, Unlock, RotateCw, Copy } from "lucide-react";
 
 export default function RightInspector() {
-  const { rooms, updateRoom, deleteRoom, toggleRoomLock, furnitureItems, selectedItemId, updateFurniture, deleteFurniture, toggleFurnitureLock, isRightPanelOpen, setRightPanelOpen, pushHistory } = usePlannerStore();
+  const { rooms, updateRoom, deleteRoom, toggleRoomLock, furnitureItems, selectedItemId, updateFurniture, deleteFurniture, duplicateFurniture, toggleFurnitureLock, isRightPanelOpen, setRightPanelOpen, pushHistory } = usePlannerStore();
 
   const selectedItem = furnitureItems.find((i) => i.id === selectedItemId);
   const selectedRoom = rooms.find((r) => r.id === selectedItemId);
@@ -194,6 +194,9 @@ export default function RightInspector() {
                 {selectedItem.isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
                 {selectedItem.isLocked ? "Kilitli (açmak için dokun)" : "Nesneyi Kilitle"}
               </button>
+              <Button variant="secondary" fullWidth icon={<Copy className="w-4 h-4" />} onClick={() => duplicateFurniture(selectedItem.id)}>
+                Çoğalt
+              </Button>
               <Button variant="danger" fullWidth onClick={() => deleteFurniture(selectedItem.id)}>
                 Nesneyi Sil
               </Button>
