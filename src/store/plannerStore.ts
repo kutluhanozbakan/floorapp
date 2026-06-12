@@ -9,9 +9,11 @@ type PlannerState = ProjectState & {
   isLeftPanelOpen: boolean;
   isRightPanelOpen: boolean;
   isDraggingItem: boolean;
+  isArModalOpen: boolean;
   setLeftPanelOpen: (open: boolean) => void;
   setRightPanelOpen: (open: boolean) => void;
   setDraggingItem: (dragging: boolean) => void;
+  setArModalOpen: (open: boolean) => void;
   setMode: (mode: "2d" | "3d") => void;
   addRoom: (room: Room) => void;
   updateRoom: (id: string, data: Partial<Room>) => void;
@@ -50,10 +52,12 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   isLeftPanelOpen: false,
   isRightPanelOpen: false,
   isDraggingItem: false,
+  isArModalOpen: false,
 
   setLeftPanelOpen: (open) => set({ isLeftPanelOpen: open }),
   setRightPanelOpen: (open) => set({ isRightPanelOpen: open }),
   setDraggingItem: (dragging) => set({ isDraggingItem: dragging }),
+  setArModalOpen: (open) => set({ isArModalOpen: open }),
 
   setMode: (mode) => set({ currentMode: mode }),
 

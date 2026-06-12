@@ -16,8 +16,9 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
 
-    // Store with a 120s expiry. The web app polls and imports within seconds.
-    await redis.set(AR_SCAN_KEY, JSON.stringify(data), "EX", 120);
+    // Store with a 10-minute expiry so the desktop has a comfortable window to
+    // pick it up. The web app polls continuously while open.
+    await redis.set(AR_SCAN_KEY, JSON.stringify(data), "EX", 600);
 
     return NextResponse.json({ success: true });
   } catch (err) {

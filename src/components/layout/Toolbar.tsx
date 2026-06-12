@@ -1,34 +1,15 @@
 "use client";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import { exportProjectToJson } from "@/utils/storage";
 import { Save, Download, Upload, Trash2, Box, Map, Smartphone, PanelLeft, SlidersHorizontal, MoreVertical } from "lucide-react";
 
 export default function Toolbar() {
-  const { currentMode, setMode, saveProject, importProject, resetProject, setLeftPanelOpen, setRightPanelOpen } = usePlannerStore();
+  const { currentMode, setMode, saveProject, importProject, resetProject, setLeftPanelOpen, setRightPanelOpen, isArModalOpen, setArModalOpen } = usePlannerStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isArModalOpen, setIsArModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isArModalOpen) {
-      interval = setInterval(async () => {
-        try {
-          const res = await fetch("/api/ar/sync");
-          const result = await res.json();
-          if (result.hasNewData && result.data) {
-            importProject(result.data);
-            setIsArModalOpen(false);
-            alert("AR Scan imported successfully!");
-          }
-        } catch {
-          // ignore network errors during polling
-        }
-      }, 3000);
-    }
-    return () => clearInterval(interval);
-  }, [isArModalOpen, importProject]);
+  // Incoming scans are imported globally by <ArSyncWatcher/>, so this modal is
+  // now just informational (shows the /scan URL).
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -133,7 +114,7 @@ export default function Toolbar() {
         <div className="w-px h-6 bg-slate-300 mx-1"></div>
 
         <button
-          onClick={() => setIsArModalOpen(true)}
+          onClick={() => setArModalOpen(true)}
           className="flex items-center px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 border border-indigo-700 rounded hover:bg-indigo-700 transition-colors"
         >
           <Smartphone className="w-4 h-4 mr-1.5" />
@@ -176,7 +157,7 @@ export default function Toolbar() {
                 <MenuItem icon={<Save className="w-4 h-4" />} label="Save" onClick={() => { saveProject(); setIsMenuOpen(false); }} />
                 <MenuItem icon={<Download className="w-4 h-4" />} label="Export JSON" onClick={() => { exportProjectToJson(usePlannerStore.getState()); setIsMenuOpen(false); }} />
                 <MenuItem icon={<Upload className="w-4 h-4" />} label="Import JSON" onClick={() => { handleImportClick(); setIsMenuOpen(false); }} />
-                <MenuItem icon={<Smartphone className="w-4 h-4 text-indigo-600" />} label="Connect AR" onClick={() => { setIsArModalOpen(true); setIsMenuOpen(false); }} />
+                <MenuItem icon={<Smartphone className="w-4 h-4 text-indigo-600" />} label="Connect AR" onClick={() => { setArModalOpen(true); setIsMenuOpen(false); }} />
                 <div className="my-1 border-t border-slate-100" />
                 <MenuItem icon={<Trash2 className="w-4 h-4" />} label="Reset" danger onClick={() => { setIsMenuOpen(false); handleReset(); }} />
               </div>
@@ -201,7 +182,7 @@ export default function Toolbar() {
                 <Smartphone className="w-5 h-5 mr-2 text-indigo-600" />
                 Connect AR Scanner
               </h3>
-              <button onClick={() => setIsArModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setArModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 ✕
               </button>
             </div>
@@ -223,9 +204,13 @@ export default function Toolbar() {
               </a>
             </div>
 
-            <div className="flex items-center justify-center space-x-2 text-sm text-indigo-600 font-medium animate-pulse">
+            <p className="text-xs text-slate-500 text-center">
+              The app listens automatically — a room sent from your phone shows up
+              within a few seconds, even if you close this dialog.
+            </p>
+            <div className="mt-3 flex items-center justify-center space-x-2 text-sm text-indigo-600 font-medium animate-pulse">
               <div className="w-2 h-2 rounded-full bg-indigo-600"></div>
-              <span>Waiting for scan data...</span>
+              <span>Listening for scans...</span>
             </div>
           </div>
         </div>
