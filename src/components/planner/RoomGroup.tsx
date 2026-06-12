@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useThree } from "@react-three/fiber";
 import { useDrag } from "@use-gesture/react";
 import * as THREE from "three";
-import { Room, FurnitureItem as FurnitureItemType } from "@/types/planner";
+import { Room } from "@/types/planner";
 import { usePlannerStore } from "@/store/plannerStore";
 import Walls from "./Walls";
 import FurnitureItem from "./FurnitureItem";
@@ -32,6 +32,9 @@ export default function RoomGroup({ room }: Props) {
   const bind = useDrag(
     ({ first, last, event, xy: [px, py], memo }) => {
       (event as { stopPropagation?: () => void })?.stopPropagation?.();
+
+      // Locked rooms can be selected but never moved.
+      if (room.isLocked) return memo;
 
       if (first) {
         setDraggingItem(true);
@@ -115,7 +118,7 @@ export default function RoomGroup({ room }: Props) {
         onPointerOver={(e) => {
           e.stopPropagation();
           setIsHovered(true);
-          document.body.style.cursor = "grab";
+          document.body.style.cursor = room.isLocked ? "not-allowed" : "grab";
         }}
         onPointerOut={() => {
           setIsHovered(false);
@@ -128,7 +131,7 @@ export default function RoomGroup({ room }: Props) {
 
       <Walls room={room} furnitureItems={roomItems} />
       
-      {isSelected && <RoomEditor room={room} />}
+      {isSelected && !room.isLocked && <RoomEditor room={room} />}
 
       {roomItems.map((item) => (
         <FurnitureItem key={item.id} item={item} room={room} />

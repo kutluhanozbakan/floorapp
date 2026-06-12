@@ -13,6 +13,13 @@ export default function LeftPanel() {
   const { addFurniture, isLeftPanelOpen, setLeftPanelOpen, addRoom, rooms } = usePlannerStore();
 
   const handleAdd = (type: FurnitureType, name: string, scale: [number, number, number]) => {
+    // Windows sit 1m off the floor by default; doors rest on the floor. Everything
+    // else keeps y=0. Setting this on add (not just on drag) keeps the wall cut-out
+    // at the right height immediately.
+    let y = 0;
+    if (type === "window") y = 1.0 + scale[1] / 2;
+    else if (type === "door") y = scale[1] / 2;
+
     // Add to the first room or a selected room if we had a specific way.
     // Since we use global furniture items, they will render in the first room if no roomId,
     // but better to explicitly assign it to the first room or selected room.
@@ -21,7 +28,7 @@ export default function LeftPanel() {
       roomId: rooms[0]?.id,
       type,
       name,
-      position: [0, 0, 0],
+      position: [0, y, 0],
       rotation: [0, 0, 0],
       scale,
     });

@@ -6,6 +6,7 @@ export type Room = {
   depth: number;
   wallHeight: number;
   wallThickness: number;
+  isLocked?: boolean;
 };
 
 export type FurnitureType = 
@@ -21,6 +22,7 @@ export type FurnitureItem = {
   position: [number, number, number];
   rotation: [number, number, number];
   scale: [number, number, number];
+  isLocked?: boolean;
 };
 
 export type ProjectState = {

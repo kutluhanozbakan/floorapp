@@ -1,10 +1,10 @@
 "use client";
 import React from "react";
 import { usePlannerStore } from "@/store/plannerStore";
-import { X } from "lucide-react";
+import { X, Lock, Unlock } from "lucide-react";
 
 export default function RightInspector() {
-  const { rooms, updateRoom, deleteRoom, furnitureItems, selectedItemId, updateFurniture, deleteFurniture, isRightPanelOpen, setRightPanelOpen } = usePlannerStore();
+  const { rooms, updateRoom, deleteRoom, toggleRoomLock, furnitureItems, selectedItemId, updateFurniture, deleteFurniture, toggleFurnitureLock, isRightPanelOpen, setRightPanelOpen } = usePlannerStore();
 
   const selectedItem = furnitureItems.find((i) => i.id === selectedItemId);
   const selectedRoom = rooms.find((r) => r.id === selectedItemId);
@@ -74,6 +74,19 @@ export default function RightInspector() {
                 className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 min={1} max={10} step={0.1}
               />
+            </div>
+            <div className="pt-1">
+              <button
+                onClick={() => toggleRoomLock(selectedRoom.id)}
+                className={`w-full flex items-center justify-center gap-2 py-2 border rounded text-sm font-medium transition-colors ${
+                  selectedRoom.isLocked
+                    ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                    : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                }`}
+              >
+                {selectedRoom.isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                {selectedRoom.isLocked ? "Locked (tap to unlock)" : "Lock Room"}
+              </button>
             </div>
             {rooms.length > 1 && (
               <div className="pt-2">
@@ -186,7 +199,18 @@ export default function RightInspector() {
             </div>
           </div>
           
-          <div className="pt-4 mt-4 border-t border-slate-100">
+          <div className="pt-4 mt-4 border-t border-slate-100 space-y-2">
+             <button
+                onClick={() => toggleFurnitureLock(selectedItem.id)}
+                className={`w-full flex items-center justify-center gap-2 py-2 border rounded text-sm font-medium transition-colors ${
+                  selectedItem.isLocked
+                    ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                    : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                }`}
+              >
+                {selectedItem.isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                {selectedItem.isLocked ? "Locked (tap to unlock)" : "Lock Object"}
+              </button>
              <button
                 onClick={() => deleteFurniture(selectedItem.id)}
                 className="w-full py-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded text-sm font-medium transition-colors"

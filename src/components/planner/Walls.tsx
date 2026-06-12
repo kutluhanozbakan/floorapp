@@ -9,8 +9,19 @@ interface Props {
   furnitureItems: FurnitureItem[];
 }
 
-export default function Walls({ room, furnitureItems }: Props) {
+// Only the door/window items actually affect the wall geometry (they get cut
+// out via CSG). Serializing just those lets us skip the expensive CSG work when
+// any other furniture (e.g. a sofa) is being dragged.
+const serializeCutters = (items: FurnitureItem[]) =>
+  JSON.stringify(
+    items
+      .filter((i) => i.type === "door" || i.type === "window")
+      .map((i) => ({ p: i.position, r: i.rotation, s: i.scale }))
+  );
+
+function Walls({ room, furnitureItems }: Props) {
   const { width, depth, wallHeight, wallThickness } = room;
+  const cuttersKey = serializeCutters(furnitureItems);
 
   const walls = useMemo(() => {
     const material = new THREE.MeshStandardMaterial({ color: "#f8fafc" });
@@ -65,7 +76,8 @@ export default function Walls({ room, furnitureItems }: Props) {
     });
 
     return { backWall, frontWall, leftWall, rightWall };
-  }, [width, depth, wallHeight, wallThickness, furnitureItems]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [width, depth, wallHeight, wallThickness, cuttersKey]);
 
   return (
     <group>
@@ -76,3 +88,21 @@ export default function Walls({ room, furnitureItems }: Props) {
     </group>
   );
 }
+
+// Skip re-rendering (and thus the CSG recompute / per-frame serialization) when
+// only non-cutting furniture changed — e.g. while dragging a sofa around.
+function areEqual(prev: Props, next: Props) {
+  const r1 = prev.room;
+  const r2 = next.room;
+  if (
+    r1.width !== r2.width ||
+    r1.depth !== r2.depth ||
+    r1.wallHeight !== r2.wallHeight ||
+    r1.wallThickness !== r2.wallThickness
+  ) {
+    return false;
+  }
+  return serializeCutters(prev.furnitureItems) === serializeCutters(next.furnitureItems);
+}
+
+export default React.memo(Walls, areEqual);

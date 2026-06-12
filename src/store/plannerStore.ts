@@ -16,9 +16,11 @@ type PlannerState = ProjectState & {
   addRoom: (room: Room) => void;
   updateRoom: (id: string, data: Partial<Room>) => void;
   deleteRoom: (id: string) => void;
+  toggleRoomLock: (id: string) => void;
   addFurniture: (item: FurnitureItem) => void;
   updateFurniture: (id: string, data: Partial<FurnitureItem>) => void;
   deleteFurniture: (id: string) => void;
+  toggleFurnitureLock: (id: string) => void;
   selectFurniture: (id: string | null) => void; // Selects either a room or a furniture item
   saveProject: () => void;
   loadProject: () => void;
@@ -75,6 +77,13 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       selectedItemId: state.selectedItemId === id ? null : state.selectedItemId,
     })),
 
+  toggleRoomLock: (id) =>
+    set((state) => ({
+      rooms: state.rooms.map((room) =>
+        room.id === id ? { ...room, isLocked: !room.isLocked } : room
+      ),
+    })),
+
   addFurniture: (item) =>
     set((state) => ({
       furnitureItems: [...state.furnitureItems, item],
@@ -92,6 +101,13 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
     set((state) => ({
       furnitureItems: state.furnitureItems.filter((item) => item.id !== id),
       selectedItemId: state.selectedItemId === id ? null : state.selectedItemId,
+    })),
+
+  toggleFurnitureLock: (id) =>
+    set((state) => ({
+      furnitureItems: state.furnitureItems.map((item) =>
+        item.id === id ? { ...item, isLocked: !item.isLocked } : item
+      ),
     })),
 
   selectFurniture: (id) => set({ selectedItemId: id }),

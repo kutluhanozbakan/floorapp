@@ -51,6 +51,8 @@ export default function FurnitureItem({ item, room }: Props) {
       // Keep the gesture from reaching OrbitControls / canvas deselect.
       (event as { stopPropagation?: () => void })?.stopPropagation?.();
 
+      if (item.isLocked) return memo;
+
       // Disable orbit/pan controls while a piece of furniture is being dragged
       // so the camera doesn't fight the drag (CameraController applies the flag).
       if (first) {
@@ -122,35 +124,42 @@ export default function FurnitureItem({ item, room }: Props) {
 
       let targetY = item.position[1];
       if (isDoorOrWindow) {
-        targetY = item.scale[1] / 2;
+        targetY = item.type === "window" ? 1.0 + item.scale[1] / 2 : item.scale[1] / 2;
       }
+
+      // Flat or wall-mounted pieces can be freely placed (and don't block others):
+      // a rug goes under furniture, doors/windows live in the wall.
+      const PASS_THROUGH = new Set(["rug", "door", "window"]);
 
       // Check for overlap with other furniture items
       const isRotated = Math.abs(targetRotation[1]) === Math.PI / 2;
       const newW = isRotated ? item.scale[2] : item.scale[0];
       const newD = isRotated ? item.scale[0] : item.scale[2];
-      // Slightly reduce bounding box to allow sliding past tightly packed items
-      const margin = 0.05; 
-      const nMinX = targetX - newW / 2 + margin;
-      const nMaxX = targetX + newW / 2 - margin;
-      const nMinZ = targetZ - newD / 2 + margin;
-      const nMaxZ = targetZ + newD / 2 - margin;
+      // Slightly negative margin to allow objects to touch or slide against each other
+      const margin = -0.01;
+      const nMinX = targetX - newW / 2 - margin;
+      const nMaxX = targetX + newW / 2 + margin;
+      const nMinZ = targetZ - newD / 2 - margin;
+      const nMaxZ = targetZ + newD / 2 + margin;
 
       let hasOverlap = false;
-      for (const other of furnitureItems) {
-        if (other.id === item.id || other.roomId !== room.id) continue;
-        
-        const oIsRotated = Math.abs(other.rotation[1]) === Math.PI / 2;
-        const oW = oIsRotated ? other.scale[2] : other.scale[0];
-        const oD = oIsRotated ? other.scale[0] : other.scale[2];
-        const oMinX = other.position[0] - oW / 2 + margin;
-        const oMaxX = other.position[0] + oW / 2 - margin;
-        const oMinZ = other.position[2] - oD / 2 + margin;
-        const oMaxZ = other.position[2] + oD / 2 - margin;
-        
-        if (nMinX < oMaxX && nMaxX > oMinX && nMinZ < oMaxZ && nMaxZ > oMinZ) {
-           hasOverlap = true;
-           break;
+      if (!PASS_THROUGH.has(item.type)) {
+        for (const other of furnitureItems) {
+          if (other.id === item.id || other.roomId !== room.id) continue;
+          if (PASS_THROUGH.has(other.type)) continue;
+
+          const oIsRotated = Math.abs(other.rotation[1]) === Math.PI / 2;
+          const oW = oIsRotated ? other.scale[2] : other.scale[0];
+          const oD = oIsRotated ? other.scale[0] : other.scale[2];
+          const oMinX = other.position[0] - oW / 2 - margin;
+          const oMaxX = other.position[0] + oW / 2 + margin;
+          const oMinZ = other.position[2] - oD / 2 - margin;
+          const oMaxZ = other.position[2] + oD / 2 + margin;
+
+          if (nMinX < oMaxX && nMaxX > oMinX && nMinZ < oMaxZ && nMaxZ > oMinZ) {
+            hasOverlap = true;
+            break;
+          }
         }
       }
 
@@ -204,23 +213,32 @@ export default function FurnitureItem({ item, room }: Props) {
     }
   };
 
+  const dragProps = bind() as unknown as {
+    onPointerDown?: (e: ThreeEvent<PointerEvent>) => void;
+  } & Record<string, unknown>;
+
   return (
     <group
       ref={meshRef}
       position={item.position as [number, number, number]}
       rotation={item.rotation as [number, number, number]}
       scale={item.scale as [number, number, number]}
-      {...(bind() as Record<string, unknown>)}
+      {...dragProps}
+      onPointerDown={(e: ThreeEvent<PointerEvent>) => {
+        e.stopPropagation();
+        if (dragProps.onPointerDown) dragProps.onPointerDown(e);
+      }}
       onClick={(e: ThreeEvent<MouseEvent>) => {
         e.stopPropagation();
         selectFurniture(item.id);
       }}
-      onPointerOver={(e: ThreeEvent<PointerEvent>) => {
+      onPointerEnter={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
         setIsHovered(true);
-        document.body.style.cursor = "move";
+        if (!item.isLocked) document.body.style.cursor = "move";
       }}
-      onPointerOut={() => {
+      onPointerLeave={(e: ThreeEvent<PointerEvent>) => {
+        e.stopPropagation();
         setIsHovered(false);
         document.body.style.cursor = "default";
       }}
@@ -244,9 +262,12 @@ export default function FurnitureItem({ item, room }: Props) {
 
       {/* Hover dimensions overlay */}
       {isHovered && !isDraggingItem && (
-        <Html position={[0, item.scale[1] / 2 + 0.2, 0]} center zIndexRange={[100, 0]}>
-          <div className="bg-slate-800/90 backdrop-blur-sm text-white px-3 py-1.5 rounded shadow-xl pointer-events-none border border-slate-600/50">
-            <div className="font-semibold text-xs mb-0.5">{item.name}</div>
+        <Html position={[0, item.scale[1] / 2 + 0.2, 0]} center zIndexRange={[100, 0]} style={{ pointerEvents: "none" }}>
+          <div className="pointer-events-none select-none bg-slate-800/90 backdrop-blur-sm text-white px-3 py-1.5 rounded shadow-xl border border-slate-600/50 flex flex-col items-center">
+            <div className="font-semibold text-xs mb-0.5 flex items-center gap-1">
+              {item.isLocked && <span className="text-yellow-400">🔒</span>}
+              {item.name}
+            </div>
             <div className="text-[10px] text-slate-300 whitespace-nowrap">
               {item.scale[0].toFixed(2)}W × {item.scale[1].toFixed(2)}H × {item.scale[2].toFixed(2)}D (m)
             </div>
