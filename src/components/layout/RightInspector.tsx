@@ -45,6 +45,28 @@ export default function RightInspector() {
                 className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Pos X - meters</label>
+                <input
+                  type="number"
+                  value={selectedRoom.position[0].toFixed(2)}
+                  onChange={(e) => updateRoom(selectedRoom.id, { position: [parseFloat(e.target.value) || 0, selectedRoom.position[1], selectedRoom.position[2]] })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  step={0.5}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Pos Z - meters</label>
+                <input
+                  type="number"
+                  value={selectedRoom.position[2].toFixed(2)}
+                  onChange={(e) => updateRoom(selectedRoom.id, { position: [selectedRoom.position[0], selectedRoom.position[1], parseFloat(e.target.value) || 0] })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  step={0.5}
+                />
+              </div>
+            </div>
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-1">Width (X) - meters</label>
               <input

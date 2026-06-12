@@ -64,7 +64,12 @@ export default function RoomGroup({ room }: Props) {
       const snapDistance = 1.0;
       rooms.forEach((otherRoom) => {
         if (otherRoom.id === room.id) return;
-        
+
+        // Walls extend OUTWARD from the floor edge by their thickness. To keep the
+        // two rooms' walls flush side-by-side instead of overlapping/interpenetrating,
+        // we leave a gap between the floor edges equal to both wall thicknesses.
+        const gap = room.wallThickness + otherRoom.wallThickness;
+
         // Check if dragging near other room's walls
         // Room bounds
         const r1MinX = targetX - room.width / 2;
@@ -77,18 +82,18 @@ export default function RoomGroup({ room }: Props) {
         const r2MinZ = otherRoom.position[2] - otherRoom.depth / 2;
         const r2MaxZ = otherRoom.position[2] + otherRoom.depth / 2;
 
-        // X-axis snapping
+        // X-axis snapping (leave room for both walls so they sit flush)
         if (Math.abs(r1MaxX - r2MinX) < snapDistance && (r1MaxZ > r2MinZ && r1MinZ < r2MaxZ)) {
-          targetX = r2MinX - room.width / 2;
+          targetX = r2MinX - gap - room.width / 2;
         } else if (Math.abs(r1MinX - r2MaxX) < snapDistance && (r1MaxZ > r2MinZ && r1MinZ < r2MaxZ)) {
-          targetX = r2MaxX + room.width / 2;
+          targetX = r2MaxX + gap + room.width / 2;
         }
 
         // Z-axis snapping
         if (Math.abs(r1MaxZ - r2MinZ) < snapDistance && (r1MaxX > r2MinX && r1MinX < r2MaxX)) {
-          targetZ = r2MinZ - room.depth / 2;
+          targetZ = r2MinZ - gap - room.depth / 2;
         } else if (Math.abs(r1MinZ - r2MaxZ) < snapDistance && (r1MaxX > r2MinX && r1MinX < r2MaxX)) {
-          targetZ = r2MaxZ + room.depth / 2;
+          targetZ = r2MaxZ + gap + room.depth / 2;
         }
       });
 
