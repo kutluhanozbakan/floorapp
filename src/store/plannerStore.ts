@@ -3,6 +3,8 @@ import { create } from "zustand";
 import { FurnitureItem, ProjectState, Room } from "@/types/planner";
 import { loadProjectFromStorage, saveProjectToStorage } from "@/utils/storage";
 
+type HistorySnapshot = { rooms: Room[]; furnitureItems: FurnitureItem[] };
+
 type PlannerState = ProjectState & {
   currentMode: "2d" | "3d";
   selectedItemId: string | null;
@@ -10,11 +12,20 @@ type PlannerState = ProjectState & {
   isRightPanelOpen: boolean;
   isDraggingItem: boolean;
   isArModalOpen: boolean;
+  // Undo/redo stacks of {rooms, furnitureItems} snapshots.
+  past: HistorySnapshot[];
+  future: HistorySnapshot[];
   setLeftPanelOpen: (open: boolean) => void;
   setRightPanelOpen: (open: boolean) => void;
   setDraggingItem: (dragging: boolean) => void;
   setArModalOpen: (open: boolean) => void;
   setMode: (mode: "2d" | "3d") => void;
+  // Capture the current state onto the undo stack BEFORE an interaction mutates
+  // it. Callers invoke this once at the start of a discrete change (or once per
+  // drag/edit session) so high-frequency updates collapse into a single step.
+  pushHistory: () => void;
+  undo: () => void;
+  redo: () => void;
   addRoom: (room: Room) => void;
   updateRoom: (id: string, data: Partial<Room>) => void;
   deleteRoom: (id: string) => void;
@@ -29,6 +40,15 @@ type PlannerState = ProjectState & {
   importProject: (state: ProjectState) => void;
   resetProject: () => void;
 };
+
+const HISTORY_LIMIT = 50;
+
+// Deep-clone the undoable slice. Data is plain arrays/objects/number tuples, so
+// JSON round-trip is safe and avoids shared references between snapshots.
+const snapshot = (s: ProjectState): HistorySnapshot => ({
+  rooms: JSON.parse(JSON.stringify(s.rooms)),
+  furnitureItems: JSON.parse(JSON.stringify(s.furnitureItems)),
+});
 
 const defaultRoom: Room = {
   id: "room-1",
@@ -53,6 +73,8 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   isRightPanelOpen: false,
   isDraggingItem: false,
   isArModalOpen: false,
+  past: [],
+  future: [],
 
   setLeftPanelOpen: (open) => set({ isLeftPanelOpen: open }),
   setRightPanelOpen: (open) => set({ isRightPanelOpen: open }),
@@ -61,11 +83,45 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
 
   setMode: (mode) => set({ currentMode: mode }),
 
-  addRoom: (room) =>
+  pushHistory: () =>
+    set((state) => ({
+      past: [...state.past, snapshot(state)].slice(-HISTORY_LIMIT),
+      future: [], // any new change invalidates the redo stack
+    })),
+
+  undo: () =>
+    set((state) => {
+      if (state.past.length === 0) return {};
+      const previous = state.past[state.past.length - 1];
+      return {
+        past: state.past.slice(0, -1),
+        future: [snapshot(state), ...state.future].slice(0, HISTORY_LIMIT),
+        rooms: previous.rooms,
+        furnitureItems: previous.furnitureItems,
+        selectedItemId: null,
+      };
+    }),
+
+  redo: () =>
+    set((state) => {
+      if (state.future.length === 0) return {};
+      const next = state.future[0];
+      return {
+        past: [...state.past, snapshot(state)].slice(-HISTORY_LIMIT),
+        future: state.future.slice(1),
+        rooms: next.rooms,
+        furnitureItems: next.furnitureItems,
+        selectedItemId: null,
+      };
+    }),
+
+  addRoom: (room) => {
+    get().pushHistory();
     set((state) => ({
       rooms: [...state.rooms, room],
       selectedItemId: room.id,
-    })),
+    }));
+  },
 
   updateRoom: (id, data) =>
     set((state) => ({
@@ -74,25 +130,31 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       ),
     })),
 
-  deleteRoom: (id) =>
+  deleteRoom: (id) => {
+    get().pushHistory();
     set((state) => ({
       rooms: state.rooms.filter((room) => room.id !== id),
       furnitureItems: state.furnitureItems.filter((item) => item.roomId !== id),
       selectedItemId: state.selectedItemId === id ? null : state.selectedItemId,
-    })),
+    }));
+  },
 
-  toggleRoomLock: (id) =>
+  toggleRoomLock: (id) => {
+    get().pushHistory();
     set((state) => ({
       rooms: state.rooms.map((room) =>
         room.id === id ? { ...room, isLocked: !room.isLocked } : room
       ),
-    })),
+    }));
+  },
 
-  addFurniture: (item) =>
+  addFurniture: (item) => {
+    get().pushHistory();
     set((state) => ({
       furnitureItems: [...state.furnitureItems, item],
       selectedItemId: item.id,
-    })),
+    }));
+  },
 
   updateFurniture: (id, data) =>
     set((state) => ({
@@ -101,18 +163,22 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       ),
     })),
 
-  deleteFurniture: (id) =>
+  deleteFurniture: (id) => {
+    get().pushHistory();
     set((state) => ({
       furnitureItems: state.furnitureItems.filter((item) => item.id !== id),
       selectedItemId: state.selectedItemId === id ? null : state.selectedItemId,
-    })),
+    }));
+  },
 
-  toggleFurnitureLock: (id) =>
+  toggleFurnitureLock: (id) => {
+    get().pushHistory();
     set((state) => ({
       furnitureItems: state.furnitureItems.map((item) =>
         item.id === id ? { ...item, isLocked: !item.isLocked } : item
       ),
-    })),
+    }));
+  },
 
   selectFurniture: (id) => set({ selectedItemId: id }),
 
@@ -140,6 +206,9 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
         rooms: rooms || defaultState.rooms,
         furnitureItems: savedState.furnitureItems || [],
         selectedItemId: null,
+        // Initial load is the baseline — nothing to undo back past it.
+        past: [],
+        future: [],
       });
     }
   },
@@ -157,6 +226,8 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       }];
     }
 
+    // Undoable: an accidental AR/JSON import can be reverted.
+    get().pushHistory();
     set({
       rooms: rooms || defaultState.rooms,
       furnitureItems: state.furnitureItems || [],
@@ -165,6 +236,8 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   },
 
   resetProject: () => {
+    // Undoable so a misfired reset doesn't destroy work irreversibly.
+    get().pushHistory();
     set({
       ...defaultState,
       selectedItemId: null,

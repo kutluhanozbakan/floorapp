@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function RoomGroup({ room }: Props) {
-  const { furnitureItems, updateRoom, selectFurniture, selectedItemId, rooms, setDraggingItem } = usePlannerStore();
+  const { furnitureItems, updateRoom, selectFurniture, selectedItemId, rooms, setDraggingItem, pushHistory } = usePlannerStore();
   const { camera, gl } = useThree();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -54,6 +54,7 @@ export default function RoomGroup({ room }: Props) {
         memo = {
           offsetX: room.position[0] - hitPoint.x,
           offsetZ: room.position[2] - hitPoint.z,
+          pushed: false,
         };
       }
 
@@ -97,6 +98,10 @@ export default function RoomGroup({ room }: Props) {
         }
       });
 
+      if ((targetX !== room.position[0] || targetZ !== room.position[2]) && !memo.pushed) {
+        pushHistory();
+        memo.pushed = true;
+      }
       updateRoom(room.id, { position: [targetX, room.position[1], targetZ] });
 
       if (last) {

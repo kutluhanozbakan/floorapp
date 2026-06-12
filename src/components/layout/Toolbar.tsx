@@ -5,7 +5,7 @@ import { usePlannerStore } from "@/store/plannerStore";
 import { exportProjectToJson } from "@/utils/storage";
 import { getClientId } from "@/utils/session";
 import { Button, IconButton, Panel, SegmentedControl, type SegmentOption } from "@/components/ui";
-import { Save, Download, Upload, Trash2, Box, Map, Smartphone, PanelLeft, SlidersHorizontal, MoreVertical } from "lucide-react";
+import { Save, Download, Upload, Trash2, Box, Map, Smartphone, PanelLeft, SlidersHorizontal, MoreVertical, Undo2, Redo2 } from "lucide-react";
 
 type Mode = "2d" | "3d";
 
@@ -15,7 +15,7 @@ const modeOptions: SegmentOption<Mode>[] = [
 ];
 
 export default function Toolbar() {
-  const { currentMode, setMode, saveProject, importProject, resetProject, setLeftPanelOpen, setRightPanelOpen, isArModalOpen, setArModalOpen } = usePlannerStore();
+  const { currentMode, setMode, saveProject, importProject, resetProject, setLeftPanelOpen, setRightPanelOpen, isArModalOpen, setArModalOpen, undo, redo, past, future } = usePlannerStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   // Incoming scans are imported globally by <ArSyncWatcher/>, so this modal is
@@ -75,7 +75,16 @@ export default function Toolbar() {
         <div className="w-8 h-8 bg-brand rounded-control flex items-center justify-center text-white font-bold text-base shrink-0">
           F
         </div>
-        <h1 className="hidden sm:block text-lg md:text-xl font-semibold tracking-tight text-ink truncate">FloorApp</h1>
+        <h1 className="hidden lg:block text-lg md:text-xl font-semibold tracking-tight text-ink truncate">FloorApp</h1>
+
+        <div className="flex items-center ml-1">
+          <IconButton label="Geri al (Ctrl+Z)" onClick={undo} disabled={past.length === 0}>
+            <Undo2 className="w-5 h-5" />
+          </IconButton>
+          <IconButton label="Yinele (Ctrl+Shift+Z)" onClick={redo} disabled={future.length === 0}>
+            <Redo2 className="w-5 h-5" />
+          </IconButton>
+        </div>
       </div>
 
       {/* Center: 2D / 3D toggle */}

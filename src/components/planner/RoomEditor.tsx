@@ -18,7 +18,7 @@ interface HandleProps {
 }
 
 function Handle({ side, pos, rot, room }: HandleProps) {
-  const { updateRoom, setDraggingItem } = usePlannerStore();
+  const { updateRoom, setDraggingItem, pushHistory } = usePlannerStore();
   const { gl, camera } = useThree();
   
   const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -32,7 +32,8 @@ function Handle({ side, pos, rot, room }: HandleProps) {
         setDraggingItem(true);
         memo = {
           initialRoom: { width: room.width, depth: room.depth, x: room.position[0], z: room.position[2] },
-          initialHit: null
+          initialHit: null,
+          pushed: false,
         };
       }
 
@@ -73,6 +74,10 @@ function Handle({ side, pos, rot, room }: HandleProps) {
           newWidth = Math.round(newWidth * 10) / 10;
           newDepth = Math.round(newDepth * 10) / 10;
 
+          if ((newWidth !== memo.initialRoom.width || newDepth !== memo.initialRoom.depth) && !memo.pushed) {
+            pushHistory();
+            memo.pushed = true;
+          }
           updateRoom(room.id, {
             width: newWidth,
             depth: newDepth,

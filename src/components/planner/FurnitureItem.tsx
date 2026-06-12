@@ -36,7 +36,7 @@ interface Props {
 export default function FurnitureItem({ item, room }: Props) {
   const meshRef = useRef<THREE.Group>(null);
   const { camera, gl } = useThree();
-  const { furnitureItems, selectFurniture, selectedItemId, updateFurniture, setDraggingItem, isDraggingItem } = usePlannerStore();
+  const { furnitureItems, selectFurniture, selectedItemId, updateFurniture, setDraggingItem, isDraggingItem, pushHistory } = usePlannerStore();
   const [isHovered, setIsHovered] = useState(false);
 
   const isSelected = selectedItemId === item.id;
@@ -80,6 +80,7 @@ export default function FurnitureItem({ item, room }: Props) {
         memo = {
           offsetX: item.position[0] - localHitPoint.x,
           offsetZ: item.position[2] - localHitPoint.z,
+          pushed: false, // becomes true once this drag records its single undo step
         };
       }
 
@@ -164,6 +165,17 @@ export default function FurnitureItem({ item, room }: Props) {
       }
 
       if (!hasOverlap) {
+        const moved =
+          targetX !== item.position[0] ||
+          targetZ !== item.position[2] ||
+          targetRotation[1] !== item.rotation[1];
+        // Record one undo step the first time this drag actually changes the
+        // item, so a whole drag collapses into a single history entry (and a
+        // tap that doesn't move leaves no entry).
+        if (moved && !memo.pushed) {
+          pushHistory();
+          memo.pushed = true;
+        }
         updateFurniture(item.id, {
           position: [targetX, targetY, targetZ],
           rotation: targetRotation as [number, number, number],
