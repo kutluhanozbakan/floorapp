@@ -1,5 +1,5 @@
-import React, { useMemo, useRef, useState } from "react";
-import { useThree, ThreeEvent } from "@react-three/fiber";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useThree, useFrame, ThreeEvent } from "@react-three/fiber";
 import { useDrag } from "@use-gesture/react";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -48,6 +48,26 @@ export default function FurnitureItem({ item, room }: Props) {
   const [isHovered, setIsHovered] = useState(false);
 
   const isSelected = selectedItemId === item.id;
+
+  // Mount appear animation (scale-in). Scale is driven imperatively each frame
+  // (see useFrame) so it always reflects the live item.scale and eases in on add.
+  const appear = useRef(0);
+  const reduceMotion = useRef(false);
+  useEffect(() => {
+    reduceMotion.current =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+
+  useFrame((_, delta) => {
+    const g = meshRef.current;
+    if (!g) return;
+    if (appear.current < 1) {
+      appear.current = Math.min(1, appear.current + delta / 0.22);
+    }
+    const t = reduceMotion.current ? 1 : 1 - Math.pow(1 - appear.current, 3); // easeOutCubic
+    g.scale.set(item.scale[0] * t, item.scale[1] * t, item.scale[2] * t);
+  });
 
   // Reused across drag frames to avoid per-event allocations.
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
@@ -257,7 +277,6 @@ export default function FurnitureItem({ item, room }: Props) {
       ref={meshRef}
       position={item.position as [number, number, number]}
       rotation={item.rotation as [number, number, number]}
-      scale={item.scale as [number, number, number]}
       {...dragProps}
       onPointerDown={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
@@ -278,12 +297,20 @@ export default function FurnitureItem({ item, room }: Props) {
         document.body.style.cursor = "default";
       }}
     >
-      {/* Bounding box for selection highlight */}
+      {/* Selection / hover highlight: soft translucent fill + crisp edge box */}
       {(isSelected || isHovered) && (
-        <mesh position={[0, boxCenterY, 0]}>
-          <boxGeometry args={[1.05, 1.05, 1.05]} />
-          <meshBasicMaterial color={isSelected ? "#526d5d" : "#a8a29e"} wireframe />
-        </mesh>
+        <group position={[0, boxCenterY, 0]}>
+          {isSelected && (
+            <mesh>
+              <boxGeometry args={[1.06, 1.06, 1.06]} />
+              <meshBasicMaterial color="#526d5d" transparent opacity={0.12} depthWrite={false} />
+            </mesh>
+          )}
+          <mesh>
+            <boxGeometry args={[1.05, 1.05, 1.05]} />
+            <meshBasicMaterial color={isSelected ? "#526d5d" : "#a8a29e"} wireframe />
+          </mesh>
+        </group>
       )}
 
       {/* Invisible hit box to make dragging easier on mobile */}

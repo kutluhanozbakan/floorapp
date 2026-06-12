@@ -113,7 +113,7 @@ export default function CameraController() {
   return (
     <>
       <Cameras mode={currentMode} />
-      <OrbitControls ref={controlsRef} makeDefault />
+      <OrbitControls ref={controlsRef} makeDefault enableDamping dampingFactor={0.12} />
     </>
   );
 }

@@ -2,11 +2,12 @@
 
 import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Grid } from "@react-three/drei";
+import { Grid, SoftShadows } from "@react-three/drei";
 import CameraController from "./CameraController";
 import RoomGroup from "./RoomGroup";
 import CanvasTools from "./CanvasTools";
 import SelectionBar from "./SelectionBar";
+import EmptyState from "./EmptyState";
 import { usePlannerStore } from "@/store/plannerStore";
 
 export default function PlannerCanvas() {
@@ -25,20 +26,26 @@ export default function PlannerCanvas() {
     <>
       <Canvas
         shadows
+        dpr={[1, 2]}
         onPointerMissed={() => selectFurniture(null)}
         className="w-full h-full cursor-crosshair"
         style={{ touchAction: "none" }}
+        gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
           <CameraController />
-          <ambientLight intensity={0.6} />
+          <color attach="background" args={["#f4f2ed"]} />
+          <SoftShadows size={26} samples={12} focus={0.8} />
+          <hemisphereLight args={["#fcfbf7", "#d8d2c4", 0.55]} />
+          <ambientLight intensity={0.35} />
           <directionalLight
             castShadow
-            position={[10, 20, 15]}
-            intensity={1}
+            position={[12, 22, 14]}
+            intensity={1.15}
             shadow-mapSize={[2048, 2048]}
+            shadow-bias={-0.0004}
           >
-            <orthographicCamera attach="shadow-camera" args={[-20, 20, 20, -20]} />
+            <orthographicCamera attach="shadow-camera" args={[-25, 25, 25, -25, 0.1, 80]} />
           </directionalLight>
 
           {showGrid && (
@@ -65,6 +72,7 @@ export default function PlannerCanvas() {
 
       <CanvasTools />
       <SelectionBar />
+      <EmptyState />
     </>
   );
 }
