@@ -1,53 +1,36 @@
 "use client";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
-import { Button, IconButton, Input } from "@/components/ui";
+import { IconButton, Input } from "@/components/ui";
 import { cn } from "@/utils/cn";
-import { X, Lock, Unlock, RotateCw, Copy } from "lucide-react";
+import { X, Lock, Unlock, RotateCw, Copy, Trash2, ChevronDown } from "lucide-react";
 
 export default function RightInspector() {
-  const { rooms, updateRoom, deleteRoom, toggleRoomLock, furnitureItems, selectedItemId, updateFurniture, deleteFurniture, duplicateFurniture, toggleFurnitureLock, isRightPanelOpen, setRightPanelOpen, pushHistory } = usePlannerStore();
+  const {
+    rooms, updateRoom, deleteRoom, toggleRoomLock,
+    furnitureItems, selectedItemId, updateFurniture, deleteFurniture, duplicateFurniture, toggleFurnitureLock,
+    isRightPanelOpen, setRightPanelOpen, pushHistory,
+  } = usePlannerStore();
 
   const selectedItem = furnitureItems.find((i) => i.id === selectedItemId);
   const selectedRoom = rooms.find((r) => r.id === selectedItemId);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
-  // Coalesce a field's keystrokes into one undo step: reset on focus, then the
-  // first edit in that session records history once.
+  // Coalesce a field's keystrokes into one undo step.
   const pushedThisEdit = useRef(false);
-  const beginEdit = () => {
-    pushedThisEdit.current = false;
-  };
+  const beginEdit = () => { pushedThisEdit.current = false; };
   const checkpoint = () => {
-    if (!pushedThisEdit.current) {
-      pushHistory();
-      pushedThisEdit.current = true;
-    }
+    if (!pushedThisEdit.current) { pushHistory(); pushedThisEdit.current = true; }
   };
-  const editRoom: typeof updateRoom = (id, data) => {
-    checkpoint();
-    updateRoom(id, data);
-  };
-  const editFurniture: typeof updateFurniture = (id, data) => {
-    checkpoint();
-    updateFurniture(id, data);
-  };
+  const editRoom: typeof updateRoom = (id, data) => { checkpoint(); updateRoom(id, data); };
+  const editFurniture: typeof updateFurniture = (id, data) => { checkpoint(); updateFurniture(id, data); };
 
-  const lockClasses = (locked?: boolean) =>
-    cn(
-      "w-full flex items-center justify-center gap-2 py-2 border rounded-control text-sm font-medium transition-colors",
-      locked
-        ? "bg-accent/10 text-accent border-accent/25 hover:bg-accent/15"
-        : "bg-canvas text-ink border-line hover:bg-surface"
-    );
+  const title = selectedRoom ? "Oda" : selectedItem ? "Nesne" : "Özellikler";
 
   return (
     <>
-      {/* Backdrop (mobile only) */}
       {isRightPanelOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-20 md:hidden"
-          onClick={() => setRightPanelOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/40 z-20 md:hidden" onClick={() => setRightPanelOpen(false)} />
       )}
 
       <aside
@@ -56,8 +39,8 @@ export default function RightInspector() {
           isRightPanelOpen ? "translate-x-0" : "translate-x-full"
         } md:translate-x-0`}
       >
-        <div className="p-4 border-b border-line bg-surface flex items-center justify-between">
-          <h2 className="font-semibold text-ink text-sm tracking-wide">Oda Özellikleri</h2>
+        <div className="p-4 border-b border-line bg-surface flex items-center justify-between sticky top-0 z-10">
+          <h2 className="font-semibold text-ink text-sm tracking-wide">{title}</h2>
           <span className="md:hidden">
             <IconButton label="Paneli kapat" onClick={() => setRightPanelOpen(false)}>
               <X className="w-5 h-5" />
@@ -65,149 +48,171 @@ export default function RightInspector() {
           </span>
         </div>
 
+        {/* ROOM */}
         {selectedRoom && (
-          <div className="p-4 space-y-4 border-b border-line">
-            <Input
-              label="Oda Adı"
-              type="text"
-              value={selectedRoom.name}
-              onChange={(e) => editRoom(selectedRoom.id, { name: e.target.value })}
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="Konum X" unit="m" type="number" step={0.5}
-                value={selectedRoom.position[0].toFixed(2)}
-                onChange={(e) => editRoom(selectedRoom.id, { position: [parseFloat(e.target.value) || 0, selectedRoom.position[1], selectedRoom.position[2]] })}
-              />
-              <Input
-                label="Konum Z" unit="m" type="number" step={0.5}
-                value={selectedRoom.position[2].toFixed(2)}
-                onChange={(e) => editRoom(selectedRoom.id, { position: [selectedRoom.position[0], selectedRoom.position[1], parseFloat(e.target.value) || 0] })}
-              />
-            </div>
-            <Input
-              label="Genişlik (X)" unit="m" type="number" min={1} max={50} step={0.5}
-              value={selectedRoom.width.toFixed(2)}
-              onChange={(e) => editRoom(selectedRoom.id, { width: parseFloat(e.target.value) || 1 })}
-            />
-            <Input
-              label="Derinlik (Z)" unit="m" type="number" min={1} max={50} step={0.5}
-              value={selectedRoom.depth.toFixed(2)}
-              onChange={(e) => editRoom(selectedRoom.id, { depth: parseFloat(e.target.value) || 1 })}
-            />
-            <Input
-              label="Duvar Yüksekliği" unit="m" type="number" min={1} max={10} step={0.1}
-              value={selectedRoom.wallHeight.toFixed(2)}
-              onChange={(e) => editRoom(selectedRoom.id, { wallHeight: parseFloat(e.target.value) || 1 })}
-            />
-            <div className="pt-1">
-              <button onClick={() => toggleRoomLock(selectedRoom.id)} className={lockClasses(selectedRoom.isLocked)}>
-                {selectedRoom.isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-                {selectedRoom.isLocked ? "Kilitli (açmak için dokun)" : "Odayı Kilitle"}
-              </button>
-            </div>
-            {rooms.length > 1 && (
-              <Button
-                variant="danger"
-                fullWidth
-                onClick={() => {
-                  if (confirm("Bu odayı ve içindeki tüm mobilyaları silmek istediğine emin misin?")) {
-                    deleteRoom(selectedRoom.id);
-                  }
-                }}
+          <div className="p-4 space-y-4">
+            {/* Quick actions */}
+            <div className="flex items-center gap-1">
+              <IconButton
+                label={selectedRoom.isLocked ? "Kilidi aç" : "Kilitle"}
+                variant={selectedRoom.isLocked ? "primary" : "ghost"}
+                onClick={() => toggleRoomLock(selectedRoom.id)}
               >
-                Odayı Sil
-              </Button>
-            )}
+                {selectedRoom.isLocked ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
+              </IconButton>
+              {rooms.length > 1 && (
+                <IconButton
+                  label="Odayı sil"
+                  variant="danger"
+                  onClick={() => {
+                    if (confirm("Bu odayı ve içindeki tüm mobilyaları silmek istediğine emin misin?")) deleteRoom(selectedRoom.id);
+                  }}
+                >
+                  <Trash2 className="w-5 h-5" />
+                </IconButton>
+              )}
+            </div>
+
+            {/* Basic */}
+            <Input label="Oda Adı" type="text" value={selectedRoom.name}
+              onChange={(e) => editRoom(selectedRoom.id, { name: e.target.value })} />
+            <div className="grid grid-cols-2 gap-3">
+              <Input label="Genişlik (X)" unit="m" type="number" min={1} max={50} step={0.5}
+                value={selectedRoom.width.toFixed(2)}
+                onChange={(e) => editRoom(selectedRoom.id, { width: parseFloat(e.target.value) || 1 })} />
+              <Input label="Derinlik (Z)" unit="m" type="number" min={1} max={50} step={0.5}
+                value={selectedRoom.depth.toFixed(2)}
+                onChange={(e) => editRoom(selectedRoom.id, { depth: parseFloat(e.target.value) || 1 })} />
+            </div>
+            <Input label="Duvar Yüksekliği" unit="m" type="number" min={1} max={10} step={0.1}
+              value={selectedRoom.wallHeight.toFixed(2)}
+              onChange={(e) => editRoom(selectedRoom.id, { wallHeight: parseFloat(e.target.value) || 1 })} />
+
+            {/* Advanced */}
+            <Collapsible open={advancedOpen} onToggle={() => setAdvancedOpen((v) => !v)} label="Gelişmiş">
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <Input label="Konum X" unit="m" type="number" step={0.5}
+                  value={selectedRoom.position[0].toFixed(2)}
+                  onChange={(e) => editRoom(selectedRoom.id, { position: [parseFloat(e.target.value) || 0, selectedRoom.position[1], selectedRoom.position[2]] })} />
+                <Input label="Konum Z" unit="m" type="number" step={0.5}
+                  value={selectedRoom.position[2].toFixed(2)}
+                  onChange={(e) => editRoom(selectedRoom.id, { position: [selectedRoom.position[0], selectedRoom.position[1], parseFloat(e.target.value) || 0] })} />
+              </div>
+            </Collapsible>
           </div>
         )}
 
-        <div className="p-4 border-b border-line bg-surface">
-          <h2 className="font-semibold text-ink text-sm tracking-wide">Seçili Nesne</h2>
-        </div>
-
-        {selectedItem ? (
+        {/* FURNITURE */}
+        {!selectedRoom && selectedItem && (
           <div className="p-4 space-y-4">
-            <Input
-              label="İsim"
-              type="text"
-              value={selectedItem.name}
-              onChange={(e) => editFurniture(selectedItem.id, { name: e.target.value })}
-            />
-
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="Konum X" type="number" step={0.1}
-                value={selectedItem.position[0].toFixed(2)}
-                onChange={(e) => editFurniture(selectedItem.id, { position: [parseFloat(e.target.value) || 0, selectedItem.position[1], selectedItem.position[2]] })}
-              />
-              <Input
-                label="Konum Z" type="number" step={0.1}
-                value={selectedItem.position[2].toFixed(2)}
-                onChange={(e) => editFurniture(selectedItem.id, { position: [selectedItem.position[0], selectedItem.position[1], parseFloat(e.target.value) || 0] })}
-              />
+            {/* Quick actions */}
+            <div className="flex items-center gap-1">
+              <IconButton label="45° döndür" onClick={() => { pushHistory(); updateFurniture(selectedItem.id, { rotation: [selectedItem.rotation[0], selectedItem.rotation[1] + Math.PI / 4, selectedItem.rotation[2]] }); }} disabled={selectedItem.isLocked}>
+                <RotateCw className="w-5 h-5" />
+              </IconButton>
+              <IconButton label="Çoğalt" onClick={() => duplicateFurniture(selectedItem.id)}>
+                <Copy className="w-5 h-5" />
+              </IconButton>
+              <IconButton
+                label={selectedItem.isLocked ? "Kilidi aç" : "Kilitle"}
+                variant={selectedItem.isLocked ? "primary" : "ghost"}
+                onClick={() => toggleFurnitureLock(selectedItem.id)}
+              >
+                {selectedItem.isLocked ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
+              </IconButton>
+              <IconButton label="Sil" variant="danger" onClick={() => deleteFurniture(selectedItem.id)}>
+                <Trash2 className="w-5 h-5" />
+              </IconButton>
             </div>
+
+            {/* Basic */}
+            <Input label="İsim" type="text" value={selectedItem.name}
+              onChange={(e) => editFurniture(selectedItem.id, { name: e.target.value })} />
 
             <div>
               <label className="block text-xs font-medium text-ink-muted mb-1">Dönüş Y (derece)</label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number" step={15} className="flex-1"
-                  value={Math.round((selectedItem.rotation[1] * 180) / Math.PI)}
-                  onChange={(e) => editFurniture(selectedItem.id, { rotation: [selectedItem.rotation[0], ((parseFloat(e.target.value) || 0) * Math.PI) / 180, selectedItem.rotation[2]] })}
-                />
-                <IconButton
-                  label="45° döndür"
-                  onClick={() => { pushHistory(); updateFurniture(selectedItem.id, { rotation: [selectedItem.rotation[0], selectedItem.rotation[1] + Math.PI / 4, selectedItem.rotation[2]] }); }}
-                >
-                  <RotateCw className="w-4 h-4" />
-                </IconButton>
-              </div>
+              <Input type="number" step={15}
+                value={Math.round((selectedItem.rotation[1] * 180) / Math.PI)}
+                onChange={(e) => editFurniture(selectedItem.id, { rotation: [selectedItem.rotation[0], ((parseFloat(e.target.value) || 0) * Math.PI) / 180, selectedItem.rotation[2]] })} />
             </div>
 
-            <div className="pt-2">
+            <div>
               <h3 className="block text-xs font-semibold text-ink mb-2">Boyutlar (metre)</h3>
               <div className="grid grid-cols-3 gap-2">
-                <Input
-                  label="Genişlik (X)" labelClassName="text-[10px]" type="number" step={0.1} min={0.1}
-                  className="px-2 py-1.5 text-xs"
+                <Input label="Gen. (X)" labelClassName="text-[10px]" type="number" step={0.1} min={0.1} className="px-2 py-1.5 text-xs"
                   value={selectedItem.scale[0].toFixed(2)}
-                  onChange={(e) => editFurniture(selectedItem.id, { scale: [parseFloat(e.target.value) || 0.1, selectedItem.scale[1], selectedItem.scale[2]] })}
-                />
-                <Input
-                  label="Yükseklik (Y)" labelClassName="text-[10px]" type="number" step={0.1} min={0.1}
-                  className="px-2 py-1.5 text-xs"
+                  onChange={(e) => editFurniture(selectedItem.id, { scale: [parseFloat(e.target.value) || 0.1, selectedItem.scale[1], selectedItem.scale[2]] })} />
+                <Input label="Yük. (Y)" labelClassName="text-[10px]" type="number" step={0.1} min={0.1} className="px-2 py-1.5 text-xs"
                   value={selectedItem.scale[1].toFixed(2)}
-                  onChange={(e) => editFurniture(selectedItem.id, { scale: [selectedItem.scale[0], parseFloat(e.target.value) || 0.1, selectedItem.scale[2]] })}
-                />
-                <Input
-                  label="Derinlik (Z)" labelClassName="text-[10px]" type="number" step={0.1} min={0.1}
-                  className="px-2 py-1.5 text-xs"
+                  onChange={(e) => editFurniture(selectedItem.id, { scale: [selectedItem.scale[0], parseFloat(e.target.value) || 0.1, selectedItem.scale[2]] })} />
+                <Input label="Der. (Z)" labelClassName="text-[10px]" type="number" step={0.1} min={0.1} className="px-2 py-1.5 text-xs"
                   value={selectedItem.scale[2].toFixed(2)}
-                  onChange={(e) => editFurniture(selectedItem.id, { scale: [selectedItem.scale[0], selectedItem.scale[1], parseFloat(e.target.value) || 0.1] })}
-                />
+                  onChange={(e) => editFurniture(selectedItem.id, { scale: [selectedItem.scale[0], selectedItem.scale[1], parseFloat(e.target.value) || 0.1] })} />
               </div>
             </div>
 
-            <div className="pt-4 mt-4 border-t border-line space-y-2">
-              <button onClick={() => toggleFurnitureLock(selectedItem.id)} className={lockClasses(selectedItem.isLocked)}>
-                {selectedItem.isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-                {selectedItem.isLocked ? "Kilitli (açmak için dokun)" : "Nesneyi Kilitle"}
-              </button>
-              <Button variant="secondary" fullWidth icon={<Copy className="w-4 h-4" />} onClick={() => duplicateFurniture(selectedItem.id)}>
-                Çoğalt
-              </Button>
-              <Button variant="danger" fullWidth onClick={() => deleteFurniture(selectedItem.id)}>
-                Nesneyi Sil
-              </Button>
+            {/* Advanced */}
+            <Collapsible open={advancedOpen} onToggle={() => setAdvancedOpen((v) => !v)} label="Gelişmiş — hassas konum">
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <Input label="Konum X" unit="m" type="number" step={0.1}
+                  value={selectedItem.position[0].toFixed(2)}
+                  onChange={(e) => editFurniture(selectedItem.id, { position: [parseFloat(e.target.value) || 0, selectedItem.position[1], selectedItem.position[2]] })} />
+                <Input label="Konum Z" unit="m" type="number" step={0.1}
+                  value={selectedItem.position[2].toFixed(2)}
+                  onChange={(e) => editFurniture(selectedItem.id, { position: [selectedItem.position[0], selectedItem.position[1], parseFloat(e.target.value) || 0] })} />
+              </div>
+            </Collapsible>
+          </div>
+        )}
+
+        {/* EMPTY STATE — project summary */}
+        {!selectedRoom && !selectedItem && (
+          <div className="p-6 space-y-4">
+            <div className="rounded-panel border border-line bg-canvas p-4">
+              <p className="text-xs font-medium text-ink-muted mb-2">Proje özeti</p>
+              <div className="flex gap-4">
+                <Summary value={rooms.length} label="Oda" />
+                <Summary value={furnitureItems.length} label="Nesne" />
+              </div>
             </div>
+            <p className="text-sm text-ink-muted text-center leading-relaxed">
+              Düzenlemek için bir oda ya da nesne seç. Kataloğdan ekle, sürükleyerek
+              yerleştir; <span className="text-ink">Çoğalt</span>, döndür ve kilitle.
+            </p>
           </div>
-        ) : !selectedRoom ? (
-          <div className="p-8 text-center text-ink-muted text-sm">
-            Özelliklerini düzenlemek için bir oda ya da nesne seç.
-          </div>
-        ) : null}
+        )}
       </aside>
     </>
+  );
+}
+
+function Summary({ value, label }: { value: number; label: string }) {
+  return (
+    <div>
+      <div className="text-2xl font-semibold text-ink tabular-nums">{value}</div>
+      <div className="text-xs text-ink-muted">{label}</div>
+    </div>
+  );
+}
+
+function Collapsible({
+  open, onToggle, label, children,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="border-t border-line pt-3">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between text-xs font-semibold text-ink-muted hover:text-ink transition-colors"
+      >
+        {label}
+        <ChevronDown className={cn("w-4 h-4 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && <div className="mt-2">{children}</div>}
+    </div>
   );
 }

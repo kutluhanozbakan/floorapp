@@ -4,6 +4,8 @@ import { usePlannerStore } from "@/store/plannerStore";
 import { generateId } from "@/utils/ids";
 import { FurnitureType } from "@/types/planner";
 import { CATALOG, CATEGORIES, CATALOG_BY_TYPE, defaultYForAdd, type CatalogItem } from "@/utils/catalog";
+import SceneTree from "./SceneTree";
+import { cn } from "@/utils/cn";
 import { X, Search, Plus } from "lucide-react";
 
 const RECENTS_KEY = "floorapp_recent_furniture";
@@ -14,6 +16,7 @@ export default function LeftPanel() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("Tümü");
   const [recents, setRecents] = useState<FurnitureType[]>([]);
+  const [tab, setTab] = useState<"catalog" | "layers">("catalog");
 
   useEffect(() => {
     try {
@@ -88,18 +91,43 @@ export default function LeftPanel() {
           isLeftPanelOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
       >
-        <div className="p-4 border-b border-line flex items-center justify-between shrink-0">
-          <h2 className="font-semibold text-ink text-sm tracking-wide">Katalog</h2>
+        <div className="px-3 pt-3 pb-0 border-b border-line flex items-center justify-between shrink-0">
+          <div className="flex gap-1">
+            <button
+              onClick={() => setTab("catalog")}
+              className={cn(
+                "px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+                tab === "catalog" ? "border-brand text-brand" : "border-transparent text-ink-muted hover:text-ink"
+              )}
+            >
+              Katalog
+            </button>
+            <button
+              onClick={() => setTab("layers")}
+              className={cn(
+                "px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+                tab === "layers" ? "border-brand text-brand" : "border-transparent text-ink-muted hover:text-ink"
+              )}
+            >
+              Katmanlar
+            </button>
+          </div>
           <button
             onClick={() => setLeftPanelOpen(false)}
             className="md:hidden text-ink-muted hover:text-ink p-1"
-            aria-label="Kataloğu kapat"
+            aria-label="Paneli kapat"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-3 space-y-3 shrink-0 border-b border-line">
+        {tab === "layers" && (
+          <div className="p-3 overflow-y-auto">
+            <SceneTree />
+          </div>
+        )}
+
+        <div className={cn("p-3 space-y-3 shrink-0 border-b border-line", tab !== "catalog" && "hidden")}>
           <button
             onClick={handleAddRoom}
             className="w-full flex items-center justify-center gap-1.5 p-2.5 bg-brand/10 text-brand hover:bg-brand/15 border border-brand/20 rounded-control transition-colors font-medium text-sm"
@@ -135,7 +163,7 @@ export default function LeftPanel() {
           </div>
         </div>
 
-        <div className="p-3 space-y-4 overflow-y-auto">
+        <div className={cn("p-3 space-y-4 overflow-y-auto", tab !== "catalog" && "hidden")}>
           {showRecents && (
             <div>
               <p className="text-xs font-medium text-ink-muted mb-2">Son kullanılanlar</p>
