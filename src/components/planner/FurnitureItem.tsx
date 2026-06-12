@@ -14,6 +14,19 @@ import Chair from "../furniture/Chair";
 import Bed from "../furniture/Bed";
 import Door from "../furniture/Door";
 import Window from "../furniture/Window";
+import TV from "../furniture/TV";
+import Bookshelf from "../furniture/Bookshelf";
+import Plant from "../furniture/Plant";
+import Lamp from "../furniture/Lamp";
+import Rug from "../furniture/Rug";
+import Desk from "../furniture/Desk";
+import Nightstand from "../furniture/Nightstand";
+import Toilet from "../furniture/Toilet";
+import Sink from "../furniture/Sink";
+import Bathtub from "../furniture/Bathtub";
+import Stove from "../furniture/Stove";
+import Fridge from "../furniture/Fridge";
+import KitchenCabinet from "../furniture/KitchenCabinet";
 
 interface Props {
   item: FurnitureItemType;
@@ -169,6 +182,19 @@ export default function FurnitureItem({ item, room }: Props) {
       case "bed": return <Bed />;
       case "door": return <Door />;
       case "window": return <Window />;
+      case "tv": return <TV />;
+      case "bookshelf": return <Bookshelf />;
+      case "plant": return <Plant />;
+      case "lamp": return <Lamp />;
+      case "rug": return <Rug />;
+      case "desk": return <Desk />;
+      case "nightstand": return <Nightstand />;
+      case "toilet": return <Toilet />;
+      case "sink": return <Sink />;
+      case "bathtub": return <Bathtub />;
+      case "stove": return <Stove />;
+      case "fridge": return <Fridge />;
+      case "kitchen_cabinet": return <KitchenCabinet />;
       default: return (
         <mesh>
           <boxGeometry args={[1, 1, 1]} />

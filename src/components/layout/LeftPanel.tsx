@@ -3,7 +3,11 @@ import React from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import { generateId } from "@/utils/ids";
 import { FurnitureType } from "@/types/planner";
-import { Armchair, Bed, Table, Box, DoorOpen, LayoutPanelTop, X } from "lucide-react";
+import { 
+  Armchair, Bed, Table, Box, DoorOpen, LayoutPanelTop, X,
+  Tv, Library, Trees, Lightbulb, Grid3X3, Laptop,
+  Bath, Droplets, Flame, Refrigerator, Archive
+} from "lucide-react";
 
 export default function LeftPanel() {
   const { addFurniture, isLeftPanelOpen, setLeftPanelOpen, addRoom, rooms } = usePlannerStore();
@@ -37,14 +41,27 @@ export default function LeftPanel() {
     setLeftPanelOpen(false);
   };
 
-  const furnitureOptions = [
-    { type: "sofa" as FurnitureType, name: "Sofa", icon: <Armchair className="w-6 h-6" />, scale: [2, 0.8, 0.9] as [number, number, number] },
-    { type: "table" as FurnitureType, name: "Table", icon: <Table className="w-6 h-6" />, scale: [1.5, 0.8, 1] as [number, number, number] },
-    { type: "chair" as FurnitureType, name: "Chair", icon: <Armchair className="w-6 h-6 scale-75" />, scale: [0.5, 0.9, 0.5] as [number, number, number] },
-    { type: "bed" as FurnitureType, name: "Bed", icon: <Bed className="w-6 h-6" />, scale: [1.6, 0.5, 2] as [number, number, number] },
-    { type: "wardrobe" as FurnitureType, name: "Wardrobe", icon: <Box className="w-6 h-6" />, scale: [1.2, 2.2, 0.6] as [number, number, number] },
-    { type: "door" as FurnitureType, name: "Door", icon: <DoorOpen className="w-6 h-6" />, scale: [1.0, 2.2, 0.2] as [number, number, number] },
-    { type: "window" as FurnitureType, name: "Window", icon: <LayoutPanelTop className="w-6 h-6" />, scale: [1.5, 1.2, 0.2] as [number, number, number] },
+  const furnitureOptions: { type: FurnitureType; name: string; icon: React.ReactNode; scale: [number, number, number] }[] = [
+    { type: "sofa", name: "Sofa", icon: <Armchair className="w-5 h-5" />, scale: [2, 0.8, 0.9] },
+    { type: "table", name: "Table", icon: <Table className="w-5 h-5" />, scale: [1.6, 0.75, 0.9] },
+    { type: "wardrobe", name: "Wardrobe", icon: <Box className="w-5 h-5" />, scale: [1.2, 2.2, 0.6] },
+    { type: "chair", name: "Chair", icon: <Armchair className="w-5 h-5 scale-75" />, scale: [0.5, 0.9, 0.5] },
+    { type: "bed", name: "Bed", icon: <Bed className="w-5 h-5" />, scale: [1.6, 0.6, 2.0] },
+    { type: "door", name: "Door", icon: <DoorOpen className="w-5 h-5" />, scale: [0.9, 2.1, 0.1] },
+    { type: "window", name: "Window", icon: <LayoutPanelTop className="w-5 h-5" />, scale: [1.2, 1.2, 0.1] },
+    { type: "tv", name: "TV", icon: <Tv className="w-5 h-5" />, scale: [1.2, 0.8, 0.1] },
+    { type: "bookshelf", name: "Bookshelf", icon: <Library className="w-5 h-5" />, scale: [0.8, 2.0, 0.4] },
+    { type: "plant", name: "Plant", icon: <Trees className="w-5 h-5" />, scale: [0.4, 1.0, 0.4] },
+    { type: "lamp", name: "Lamp", icon: <Lightbulb className="w-5 h-5" />, scale: [0.3, 1.6, 0.3] },
+    { type: "rug", name: "Rug", icon: <Grid3X3 className="w-5 h-5" />, scale: [2.0, 0.02, 1.5] },
+    { type: "desk", name: "Desk", icon: <Laptop className="w-5 h-5" />, scale: [1.2, 0.75, 0.6] },
+    { type: "nightstand", name: "Nightstand", icon: <Box className="w-5 h-5 scale-75" />, scale: [0.5, 0.5, 0.4] },
+    { type: "toilet", name: "Toilet", icon: <Bath className="w-5 h-5 scale-75" />, scale: [0.4, 0.8, 0.6] },
+    { type: "sink", name: "Sink", icon: <Droplets className="w-5 h-5" />, scale: [0.6, 0.85, 0.5] },
+    { type: "bathtub", name: "Bathtub", icon: <Bath className="w-5 h-5" />, scale: [1.7, 0.6, 0.8] },
+    { type: "stove", name: "Stove", icon: <Flame className="w-5 h-5" />, scale: [0.6, 0.9, 0.6] },
+    { type: "fridge", name: "Fridge", icon: <Refrigerator className="w-5 h-5" />, scale: [0.7, 1.8, 0.7] },
+    { type: "kitchen_cabinet", name: "Cabinet", icon: <Archive className="w-5 h-5" />, scale: [0.6, 0.9, 0.6] },
   ];
 
   return (
