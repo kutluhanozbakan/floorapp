@@ -38,7 +38,7 @@ export default function Toolbar() {
           const state = JSON.parse(content);
           importProject(state);
         } catch {
-          alert("Invalid JSON file");
+          alert("Geçersiz JSON dosyası");
         }
       };
       reader.readAsText(file);
@@ -50,34 +50,34 @@ export default function Toolbar() {
   };
 
   const handleReset = () => {
-    if (confirm("Are you sure you want to reset the project? All unsaved progress will be lost.")) {
+    if (confirm("Projeyi sıfırlamak istediğine emin misin? Kaydedilmemiş tüm değişiklikler kaybolur.")) {
       resetProject();
     }
   };
 
   return (
-    <div className="h-14 md:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-3 md:px-6 shrink-0 z-40 shadow-sm gap-2">
+    <div className="h-14 md:h-16 bg-surface border-b border-line flex items-center justify-between px-3 md:px-6 shrink-0 z-40 shadow-soft gap-2">
       {/* Left: catalog toggle (mobile) + logo */}
       <div className="flex items-center gap-2 min-w-0">
         <button
           onClick={() => setLeftPanelOpen(true)}
-          className="md:hidden flex items-center justify-center w-9 h-9 rounded-md text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition-colors"
-          aria-label="Open catalog"
+          className="md:hidden flex items-center justify-center w-9 h-9 rounded-control text-ink-muted hover:bg-canvas active:bg-canvas transition-colors"
+          aria-label="Kataloğu aç"
         >
           <PanelLeft className="w-5 h-5" />
         </button>
-        <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-base shrink-0">
-          FP
+        <div className="w-8 h-8 bg-brand rounded-control flex items-center justify-center text-white font-bold text-base shrink-0">
+          F
         </div>
-        <h1 className="hidden sm:block text-lg md:text-xl font-semibold tracking-tight text-slate-800 truncate">Floor Planner</h1>
+        <h1 className="hidden sm:block text-lg md:text-xl font-semibold tracking-tight text-ink truncate">FloorApp</h1>
       </div>
 
       {/* Center: 2D / 3D toggle */}
-      <div className="flex items-center bg-slate-100 p-1 rounded-md shrink-0">
+      <div className="flex items-center bg-canvas p-1 rounded-control shrink-0">
         <button
           onClick={() => setMode("2d")}
-          className={`flex items-center px-3 md:px-4 py-1.5 rounded text-sm font-medium transition-colors ${
-            currentMode === "2d" ? "bg-white shadow-sm text-blue-600" : "text-slate-600 hover:text-slate-900"
+          className={`flex items-center px-3 md:px-4 py-1.5 rounded-control text-sm font-medium transition-colors ${
+            currentMode === "2d" ? "bg-surface-raised shadow-soft text-brand" : "text-ink-muted hover:text-ink"
           }`}
         >
           <Map className="w-4 h-4 md:mr-2" />
@@ -85,12 +85,12 @@ export default function Toolbar() {
         </button>
         <button
           onClick={() => setMode("3d")}
-          className={`flex items-center px-3 md:px-4 py-1.5 rounded text-sm font-medium transition-colors ${
-            currentMode === "3d" ? "bg-white shadow-sm text-blue-600" : "text-slate-600 hover:text-slate-900"
+          className={`flex items-center px-3 md:px-4 py-1.5 rounded-control text-sm font-medium transition-colors ${
+            currentMode === "3d" ? "bg-surface-raised shadow-soft text-brand" : "text-ink-muted hover:text-ink"
           }`}
         >
           <Box className="w-4 h-4 md:mr-2" />
-          <span className="hidden md:inline">3D View</span>
+          <span className="hidden md:inline">3D Görünüm</span>
         </button>
       </div>
 
@@ -98,50 +98,50 @@ export default function Toolbar() {
       <div className="hidden md:flex items-center space-x-3">
         <button
           onClick={saveProject}
-          className="flex items-center px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50 transition-colors"
-          title="Save to LocalStorage"
+          className="flex items-center px-3 py-1.5 text-sm font-medium text-ink bg-surface-raised border border-line rounded-control hover:bg-canvas transition-colors"
+          title="Tarayıcıya kaydet"
         >
           <Save className="w-4 h-4 mr-1.5" />
-          Save
+          Kaydet
         </button>
 
-        <div className="w-px h-6 bg-slate-300 mx-1"></div>
+        <div className="w-px h-6 bg-line mx-1"></div>
 
         <button
           onClick={() => exportProjectToJson(usePlannerStore.getState())}
-          className="flex items-center px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50 transition-colors"
-          title="Export JSON"
+          className="flex items-center px-3 py-1.5 text-sm font-medium text-ink bg-surface-raised border border-line rounded-control hover:bg-canvas transition-colors"
+          title="JSON dışa aktar"
         >
           <Download className="w-4 h-4 mr-1.5" />
-          Export
+          Dışa Aktar
         </button>
         <button
           onClick={handleImportClick}
-          className="flex items-center px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50 transition-colors"
-          title="Import JSON"
+          className="flex items-center px-3 py-1.5 text-sm font-medium text-ink bg-surface-raised border border-line rounded-control hover:bg-canvas transition-colors"
+          title="JSON içe aktar"
         >
           <Upload className="w-4 h-4 mr-1.5" />
-          Import
+          İçe Aktar
         </button>
 
-        <div className="w-px h-6 bg-slate-300 mx-1"></div>
+        <div className="w-px h-6 bg-line mx-1"></div>
 
         <button
           onClick={() => setArModalOpen(true)}
-          className="flex items-center px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 border border-indigo-700 rounded hover:bg-indigo-700 transition-colors"
+          className="flex items-center px-3 py-1.5 text-sm font-medium text-white bg-brand rounded-control hover:bg-brand-strong transition-colors"
         >
           <Smartphone className="w-4 h-4 mr-1.5" />
-          Connect AR
+          Telefona Bağlan
         </button>
 
-        <div className="w-px h-6 bg-slate-300 mx-1"></div>
+        <div className="w-px h-6 bg-line mx-1"></div>
 
         <button
           onClick={handleReset}
-          className="flex items-center px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 transition-colors"
+          className="flex items-center px-3 py-1.5 text-sm font-medium text-danger bg-danger/10 border border-danger/20 rounded-control hover:bg-danger/15 transition-colors"
         >
           <Trash2 className="w-4 h-4 mr-1.5" />
-          Reset
+          Sıfırla
         </button>
       </div>
 
@@ -149,16 +149,16 @@ export default function Toolbar() {
       <div className="flex md:hidden items-center gap-1 shrink-0">
         <button
           onClick={() => setRightPanelOpen(true)}
-          className="flex items-center justify-center w-9 h-9 rounded-md text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition-colors"
-          aria-label="Open properties"
+          className="flex items-center justify-center w-9 h-9 rounded-control text-ink-muted hover:bg-canvas active:bg-canvas transition-colors"
+          aria-label="Özellikleri aç"
         >
           <SlidersHorizontal className="w-5 h-5" />
         </button>
         <div className="relative">
           <button
             onClick={() => setIsMenuOpen((v) => !v)}
-            className="flex items-center justify-center w-9 h-9 rounded-md text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition-colors"
-            aria-label="More actions"
+            className="flex items-center justify-center w-9 h-9 rounded-control text-ink-muted hover:bg-canvas active:bg-canvas transition-colors"
+            aria-label="Diğer işlemler"
           >
             <MoreVertical className="w-5 h-5" />
           </button>
@@ -166,13 +166,13 @@ export default function Toolbar() {
           {isMenuOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
-              <div className="absolute right-0 top-11 z-50 w-52 bg-white border border-slate-200 rounded-lg shadow-xl py-1 overflow-hidden">
-                <MenuItem icon={<Save className="w-4 h-4" />} label="Save" onClick={() => { saveProject(); setIsMenuOpen(false); }} />
-                <MenuItem icon={<Download className="w-4 h-4" />} label="Export JSON" onClick={() => { exportProjectToJson(usePlannerStore.getState()); setIsMenuOpen(false); }} />
-                <MenuItem icon={<Upload className="w-4 h-4" />} label="Import JSON" onClick={() => { handleImportClick(); setIsMenuOpen(false); }} />
-                <MenuItem icon={<Smartphone className="w-4 h-4 text-indigo-600" />} label="Connect AR" onClick={() => { setArModalOpen(true); setIsMenuOpen(false); }} />
-                <div className="my-1 border-t border-slate-100" />
-                <MenuItem icon={<Trash2 className="w-4 h-4" />} label="Reset" danger onClick={() => { setIsMenuOpen(false); handleReset(); }} />
+              <div className="absolute right-0 top-11 z-50 w-52 bg-surface-raised border border-line rounded-panel shadow-float py-1 overflow-hidden">
+                <MenuItem icon={<Save className="w-4 h-4" />} label="Kaydet" onClick={() => { saveProject(); setIsMenuOpen(false); }} />
+                <MenuItem icon={<Download className="w-4 h-4" />} label="JSON dışa aktar" onClick={() => { exportProjectToJson(usePlannerStore.getState()); setIsMenuOpen(false); }} />
+                <MenuItem icon={<Upload className="w-4 h-4" />} label="JSON içe aktar" onClick={() => { handleImportClick(); setIsMenuOpen(false); }} />
+                <MenuItem icon={<Smartphone className="w-4 h-4 text-brand" />} label="Telefona Bağlan" onClick={() => { setArModalOpen(true); setIsMenuOpen(false); }} />
+                <div className="my-1 border-t border-line" />
+                <MenuItem icon={<Trash2 className="w-4 h-4" />} label="Sıfırla" danger onClick={() => { setIsMenuOpen(false); handleReset(); }} />
               </div>
             </>
           )}
@@ -188,52 +188,52 @@ export default function Toolbar() {
       />
 
       {isArModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-surface-raised rounded-panel shadow-float w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center">
-                <Smartphone className="w-5 h-5 mr-2 text-indigo-600" />
-                Connect AR Scanner
+              <h3 className="text-lg font-semibold text-ink flex items-center">
+                <Smartphone className="w-5 h-5 mr-2 text-brand" />
+                Telefona Bağlan
               </h3>
-              <button onClick={() => setArModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setArModalOpen(false)} className="text-ink-muted hover:text-ink" aria-label="Kapat">
                 ✕
               </button>
             </div>
 
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4 text-center">
-              <p className="text-sm text-slate-600 mb-3">
-                Scan this QR with your phone to open your personal send page:
+            <div className="bg-canvas p-4 rounded-panel border border-line mb-4 text-center">
+              <p className="text-sm text-ink-muted mb-3">
+                Kendine özel gönderim sayfanı açmak için telefonunla bu QR kodu okut:
               </p>
               {qrDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={qrDataUrl}
-                  alt="Pairing QR code"
-                  className="w-44 h-44 mx-auto rounded bg-white border border-slate-200 p-1"
+                  alt="Eşleştirme QR kodu"
+                  className="w-44 h-44 mx-auto rounded bg-white border border-line p-1"
                 />
               ) : (
-                <div className="w-44 h-44 mx-auto rounded bg-slate-100 animate-pulse" />
+                <div className="w-44 h-44 mx-auto rounded bg-canvas animate-pulse" />
               )}
-              <div className="mt-3 font-mono text-[11px] text-slate-700 bg-white border border-slate-300 py-2 px-1 rounded break-all">
+              <div className="mt-3 font-mono text-[11px] text-ink bg-surface-raised border border-line py-2 px-1 rounded break-all">
                 {scanUrl || "/scan"}
               </div>
               <a
                 href={scanUrl || "/scan"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block mt-3 text-sm font-medium text-indigo-600 hover:text-indigo-800 underline"
+                className="inline-block mt-3 text-sm font-medium text-brand hover:text-brand-strong underline"
               >
-                Open the send page →
+                Gönderim sayfasını aç →
               </a>
             </div>
 
-            <p className="text-xs text-slate-500 text-center">
-              The app listens automatically — a room sent from your phone shows up
-              within a few seconds, even if you close this dialog.
+            <p className="text-xs text-ink-muted text-center">
+              Uygulama otomatik dinler — telefonundan gönderdiğin oda, bu pencereyi
+              kapatsan bile birkaç saniye içinde ekrana düşer.
             </p>
-            <div className="mt-3 flex items-center justify-center space-x-2 text-sm text-indigo-600 font-medium animate-pulse">
-              <div className="w-2 h-2 rounded-full bg-indigo-600"></div>
-              <span>Listening for scans...</span>
+            <div className="mt-3 flex items-center justify-center space-x-2 text-sm text-brand font-medium animate-pulse">
+              <div className="w-2 h-2 rounded-full bg-brand"></div>
+              <span>Taramalar dinleniyor...</span>
             </div>
           </div>
         </div>
@@ -257,7 +257,7 @@ function MenuItem({
     <button
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-left transition-colors ${
-        danger ? "text-red-600 hover:bg-red-50" : "text-slate-700 hover:bg-slate-50"
+        danger ? "text-danger hover:bg-danger/10" : "text-ink hover:bg-canvas"
       }`}
     >
       {icon}

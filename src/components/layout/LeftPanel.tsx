@@ -38,7 +38,7 @@ export default function LeftPanel() {
   const handleAddRoom = () => {
     addRoom({
       id: generateId(),
-      name: `Room ${rooms.length + 1}`,
+      name: `Oda ${rooms.length + 1}`,
       position: [rooms.length * 6, 0, 0], // Offset new room to avoid exact overlap
       width: 5,
       depth: 4,
@@ -49,26 +49,26 @@ export default function LeftPanel() {
   };
 
   const furnitureOptions: { type: FurnitureType; name: string; icon: React.ReactNode; scale: [number, number, number] }[] = [
-    { type: "sofa", name: "Sofa", icon: <Armchair className="w-5 h-5" />, scale: [2, 0.8, 0.9] },
-    { type: "table", name: "Table", icon: <Table className="w-5 h-5" />, scale: [1.6, 0.75, 0.9] },
-    { type: "wardrobe", name: "Wardrobe", icon: <Box className="w-5 h-5" />, scale: [1.2, 2.2, 0.6] },
-    { type: "chair", name: "Chair", icon: <Armchair className="w-5 h-5 scale-75" />, scale: [0.5, 0.9, 0.5] },
-    { type: "bed", name: "Bed", icon: <Bed className="w-5 h-5" />, scale: [1.6, 0.6, 2.0] },
-    { type: "door", name: "Door", icon: <DoorOpen className="w-5 h-5" />, scale: [0.9, 2.1, 0.1] },
-    { type: "window", name: "Window", icon: <LayoutPanelTop className="w-5 h-5" />, scale: [1.2, 1.2, 0.1] },
+    { type: "sofa", name: "Koltuk", icon: <Armchair className="w-5 h-5" />, scale: [2, 0.8, 0.9] },
+    { type: "table", name: "Masa", icon: <Table className="w-5 h-5" />, scale: [1.6, 0.75, 0.9] },
+    { type: "wardrobe", name: "Gardırop", icon: <Box className="w-5 h-5" />, scale: [1.2, 2.2, 0.6] },
+    { type: "chair", name: "Sandalye", icon: <Armchair className="w-5 h-5 scale-75" />, scale: [0.5, 0.9, 0.5] },
+    { type: "bed", name: "Yatak", icon: <Bed className="w-5 h-5" />, scale: [1.6, 0.6, 2.0] },
+    { type: "door", name: "Kapı", icon: <DoorOpen className="w-5 h-5" />, scale: [0.9, 2.1, 0.1] },
+    { type: "window", name: "Pencere", icon: <LayoutPanelTop className="w-5 h-5" />, scale: [1.2, 1.2, 0.1] },
     { type: "tv", name: "TV", icon: <Tv className="w-5 h-5" />, scale: [1.2, 0.8, 0.1] },
-    { type: "bookshelf", name: "Bookshelf", icon: <Library className="w-5 h-5" />, scale: [0.8, 2.0, 0.4] },
-    { type: "plant", name: "Plant", icon: <Trees className="w-5 h-5" />, scale: [0.4, 1.0, 0.4] },
-    { type: "lamp", name: "Lamp", icon: <Lightbulb className="w-5 h-5" />, scale: [0.3, 1.6, 0.3] },
-    { type: "rug", name: "Rug", icon: <Grid3X3 className="w-5 h-5" />, scale: [2.0, 0.02, 1.5] },
-    { type: "desk", name: "Desk", icon: <Laptop className="w-5 h-5" />, scale: [1.2, 0.75, 0.6] },
-    { type: "nightstand", name: "Nightstand", icon: <Box className="w-5 h-5 scale-75" />, scale: [0.5, 0.5, 0.4] },
-    { type: "toilet", name: "Toilet", icon: <Bath className="w-5 h-5 scale-75" />, scale: [0.4, 0.8, 0.6] },
-    { type: "sink", name: "Sink", icon: <Droplets className="w-5 h-5" />, scale: [0.6, 0.85, 0.5] },
-    { type: "bathtub", name: "Bathtub", icon: <Bath className="w-5 h-5" />, scale: [1.7, 0.6, 0.8] },
-    { type: "stove", name: "Stove", icon: <Flame className="w-5 h-5" />, scale: [0.6, 0.9, 0.6] },
-    { type: "fridge", name: "Fridge", icon: <Refrigerator className="w-5 h-5" />, scale: [0.7, 1.8, 0.7] },
-    { type: "kitchen_cabinet", name: "Cabinet", icon: <Archive className="w-5 h-5" />, scale: [0.6, 0.9, 0.6] },
+    { type: "bookshelf", name: "Kitaplık", icon: <Library className="w-5 h-5" />, scale: [0.8, 2.0, 0.4] },
+    { type: "plant", name: "Bitki", icon: <Trees className="w-5 h-5" />, scale: [0.4, 1.0, 0.4] },
+    { type: "lamp", name: "Lamba", icon: <Lightbulb className="w-5 h-5" />, scale: [0.3, 1.6, 0.3] },
+    { type: "rug", name: "Halı", icon: <Grid3X3 className="w-5 h-5" />, scale: [2.0, 0.02, 1.5] },
+    { type: "desk", name: "Çalışma Masası", icon: <Laptop className="w-5 h-5" />, scale: [1.2, 0.75, 0.6] },
+    { type: "nightstand", name: "Komodin", icon: <Box className="w-5 h-5 scale-75" />, scale: [0.5, 0.5, 0.4] },
+    { type: "toilet", name: "Klozet", icon: <Bath className="w-5 h-5 scale-75" />, scale: [0.4, 0.8, 0.6] },
+    { type: "sink", name: "Lavabo", icon: <Droplets className="w-5 h-5" />, scale: [0.6, 0.85, 0.5] },
+    { type: "bathtub", name: "Küvet", icon: <Bath className="w-5 h-5" />, scale: [1.7, 0.6, 0.8] },
+    { type: "stove", name: "Ocak", icon: <Flame className="w-5 h-5" />, scale: [0.6, 0.9, 0.6] },
+    { type: "fridge", name: "Buzdolabı", icon: <Refrigerator className="w-5 h-5" />, scale: [0.7, 1.8, 0.7] },
+    { type: "kitchen_cabinet", name: "Mutfak Dolabı", icon: <Archive className="w-5 h-5" />, scale: [0.6, 0.9, 0.6] },
   ];
 
   return (
@@ -82,16 +82,16 @@ export default function LeftPanel() {
       )}
 
       <aside
-        className={`fixed md:static top-14 bottom-0 md:top-auto md:bottom-auto left-0 z-30 w-64 max-w-[80vw] bg-white border-r border-slate-200 flex flex-col md:h-full shadow-lg md:shadow-sm shrink-0 transition-transform duration-300 md:transition-none ${
+        className={`fixed md:static top-14 bottom-0 md:top-auto md:bottom-auto left-0 z-30 w-64 max-w-[80vw] bg-surface-raised border-r border-line flex flex-col md:h-full shadow-lg md:shadow-sm shrink-0 transition-transform duration-300 md:transition-none ${
           isLeftPanelOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
       >
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="font-semibold text-slate-800 text-sm uppercase tracking-wider">Catalog</h2>
+        <div className="p-4 border-b border-line flex items-center justify-between">
+          <h2 className="font-semibold text-ink text-sm tracking-wide">Katalog</h2>
           <button
             onClick={() => setLeftPanelOpen(false)}
-            className="md:hidden text-slate-400 hover:text-slate-600 p-1"
-            aria-label="Close catalog"
+            className="md:hidden text-ink-muted hover:text-ink p-1"
+            aria-label="Kataloğu kapat"
           >
             <X className="w-5 h-5" />
           </button>
@@ -100,24 +100,24 @@ export default function LeftPanel() {
           <div className="mb-4">
              <button
                 onClick={handleAddRoom}
-                className="w-full flex items-center justify-center p-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all font-medium text-sm"
+                className="w-full flex items-center justify-center p-3 bg-brand/10 text-brand hover:bg-brand/15 border border-brand/20 rounded-lg transition-all font-medium text-sm"
               >
-                + Add New Room
+                + Yeni Oda Ekle
               </button>
           </div>
-          
-          <p className="text-xs text-slate-500 mb-2">Tap to add to scene</p>
+
+          <p className="text-xs text-ink-muted mb-2">Sahneye eklemek için dokun</p>
           <div className="grid grid-cols-2 gap-3">
             {furnitureOptions.map((item) => (
               <button
                 key={item.type}
                 onClick={() => handleAdd(item.type, item.name, item.scale)}
-                className="flex flex-col items-center justify-center p-3 border border-slate-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 active:bg-blue-100 transition-all group"
+                className="flex flex-col items-center justify-center p-3 border border-line rounded-lg hover:bg-brand/10 hover:border-brand/40 active:bg-brand/15 transition-all group"
               >
-                <div className="text-slate-600 group-hover:text-blue-600 transition-colors mb-2">
+                <div className="text-ink-muted group-hover:text-brand transition-colors mb-2">
                   {item.icon}
                 </div>
-                <span className="text-xs font-medium text-slate-700">{item.name}</span>
+                <span className="text-xs font-medium text-ink">{item.name}</span>
               </button>
             ))}
           </div>

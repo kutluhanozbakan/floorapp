@@ -32,7 +32,7 @@ type PlannerState = ProjectState & {
 
 const defaultRoom: Room = {
   id: "room-1",
-  name: "Living Room",
+  name: "Oturma Odası",
   position: [0, 0, 0],
   width: 5,
   depth: 4,
@@ -131,7 +131,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
         rooms = [{
           ...oldRoom,
           id: "room-1",
-          name: "Room 1",
+          name: "Oda 1",
           position: [0, 0, 0],
         }];
       }
@@ -152,7 +152,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       rooms = [{
         ...oldRoom,
         id: "room-1",
-        name: "Imported Room",
+        name: "İçe Aktarılan Oda",
         position: [0, 0, 0],
       }];
     }
