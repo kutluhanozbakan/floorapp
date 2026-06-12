@@ -32,15 +32,14 @@ export default function FurnitureItem({ item }: Props) {
   const hitPoint = useMemo(() => new THREE.Vector3(), []);
 
   const bind = useDrag(
-    ({ first, last, active, event, xy: [px, py], memo }) => {
+    ({ first, last, event, xy: [px, py], memo }) => {
       // Keep the gesture from reaching OrbitControls / canvas deselect.
       (event as { stopPropagation?: () => void })?.stopPropagation?.();
 
       // Disable orbit/pan controls while a piece of furniture is being dragged
       // so the camera doesn't fight the drag (CameraController applies the flag).
-      setDraggingItem(active);
-
       if (first) {
+        setDraggingItem(true);
         selectFurniture(item.id);
       }
 
@@ -111,7 +110,10 @@ export default function FurnitureItem({ item }: Props) {
 
       return memo;
     },
-    { filterTaps: true, pointer: { touch: true } }
+    // Pointer Events (the default) already cover mouse, touch and pen, so we do
+    // NOT force touch-only events here. filterTaps lets a plain tap select the
+    // item without it being treated as a (zero-distance) drag.
+    { filterTaps: true }
   );
 
   const renderGeometry = () => {
