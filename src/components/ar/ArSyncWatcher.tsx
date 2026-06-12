@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
+import { getClientId } from "@/utils/session";
 import { CheckCircle2 } from "lucide-react";
 
 // Polls for scans sent from the /scan page (phone) and imports them as soon as
@@ -14,10 +15,11 @@ export default function ArSyncWatcher() {
 
   useEffect(() => {
     let cancelled = false;
+    const clientId = getClientId();
 
     const poll = async () => {
       try {
-        const res = await fetch("/api/ar/sync", { cache: "no-store" });
+        const res = await fetch(`/api/ar/sync?s=${encodeURIComponent(clientId)}`, { cache: "no-store" });
         const result = await res.json();
         if (!cancelled && result.hasNewData && result.data) {
           importProject(result.data);

@@ -31,4 +31,7 @@ export function getRedis(): Redis | null {
   return client;
 }
 
-export const AR_SCAN_KEY = "latest_ar_scan";
+// Per-session key so each user only sees the scans addressed to their pairing
+// code. Falls back to a shared bucket when no session id is provided.
+export const arScanKey = (sessionId: string) =>
+  sessionId ? `ar_scan:${sessionId}` : "latest_ar_scan";

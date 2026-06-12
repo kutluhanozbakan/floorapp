@@ -1,7 +1,9 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import QRCode from "qrcode";
 import { usePlannerStore } from "@/store/plannerStore";
 import { exportProjectToJson } from "@/utils/storage";
+import { getClientId } from "@/utils/session";
 import { Save, Download, Upload, Trash2, Box, Map, Smartphone, PanelLeft, SlidersHorizontal, MoreVertical } from "lucide-react";
 
 export default function Toolbar() {
@@ -9,7 +11,18 @@ export default function Toolbar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   // Incoming scans are imported globally by <ArSyncWatcher/>, so this modal is
-  // now just informational (shows the /scan URL).
+  // just informational: it shows the per-user /scan URL + QR pairing code.
+  const [scanUrl, setScanUrl] = useState("");
+  const [qrDataUrl, setQrDataUrl] = useState("");
+
+  useEffect(() => {
+    const url = `${window.location.origin}/scan?s=${getClientId()}`;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setScanUrl(url);
+    QRCode.toDataURL(url, { width: 220, margin: 1 })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(""));
+  }, []);
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -188,14 +201,24 @@ export default function Toolbar() {
             </div>
 
             <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4 text-center">
-              <p className="text-sm text-slate-600 mb-2">
-                Open this page on your phone to enter and send a room:
+              <p className="text-sm text-slate-600 mb-3">
+                Scan this QR with your phone to open your personal send page:
               </p>
-              <div className="font-mono text-sm font-bold text-slate-800 bg-white border border-slate-300 py-2 px-1 rounded break-all">
-                {typeof window !== "undefined" ? `${window.location.origin}/scan` : "/scan"}
+              {qrDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={qrDataUrl}
+                  alt="Pairing QR code"
+                  className="w-44 h-44 mx-auto rounded bg-white border border-slate-200 p-1"
+                />
+              ) : (
+                <div className="w-44 h-44 mx-auto rounded bg-slate-100 animate-pulse" />
+              )}
+              <div className="mt-3 font-mono text-[11px] text-slate-700 bg-white border border-slate-300 py-2 px-1 rounded break-all">
+                {scanUrl || "/scan"}
               </div>
               <a
-                href="/scan"
+                href={scanUrl || "/scan"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block mt-3 text-sm font-medium text-indigo-600 hover:text-indigo-800 underline"

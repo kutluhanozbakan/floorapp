@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { generateId } from "@/utils/ids";
-import { Plus, Trash2, Send, CheckCircle2, Loader2 } from "lucide-react";
+import { sanitizeSessionId } from "@/utils/session";
+import { Plus, Trash2, Send, CheckCircle2, Loader2, AlertTriangle } from "lucide-react";
 
 type RoomForm = {
   key: string;
@@ -24,6 +25,14 @@ export default function ScanPage() {
   const [rooms, setRooms] = useState<RoomForm[]>([makeRoom(0)]);
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [sessionId, setSessionId] = useState("");
+
+  // The pairing code comes from the URL (?s=...) shown by the desktop's QR code.
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get("s");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSessionId(sanitizeSessionId(param));
+  }, []);
 
   const updateRoom = (key: string, field: keyof RoomForm, value: string) => {
     setRooms((rs) => rs.map((r) => (r.key === key ? { ...r, [field]: value } : r)));
@@ -55,7 +64,7 @@ export default function ScanPage() {
     };
 
     try {
-      const res = await fetch("/api/ar", {
+      const res = await fetch(`/api/ar?s=${encodeURIComponent(sessionId)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -89,9 +98,20 @@ export default function ScanPage() {
 
       <div className="flex-1 p-4 space-y-4 max-w-md w-full mx-auto pb-28">
         <p className="text-sm text-slate-600">
-          Oda ölçülerini gir ve uygulamaya gönder. Masaüstündeki uygulamada{" "}
-          <span className="font-semibold">Connect AR</span> açıkken birkaç saniye içinde içe aktarılır.
+          Oda ölçülerini gir ve uygulamaya gönder. Birkaç saniye içinde senin
+          masaüstü uygulamana içe aktarılır.
         </p>
+
+        {!sessionId && (
+          <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-3 text-sm">
+            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+            <span>
+              Eşleştirme kodu yok. Bu sayfayı masaüstü uygulamandaki{" "}
+              <span className="font-semibold">Connect AR</span> penceresindeki QR kodu
+              veya linki ile aç ki oda doğru kişiye (sana) gitsin.
+            </span>
+          </div>
+        )}
 
         {rooms.map((room, i) => (
           <div key={room.key} className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3">

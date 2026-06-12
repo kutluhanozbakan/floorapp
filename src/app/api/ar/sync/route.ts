@@ -1,21 +1,26 @@
 import { NextResponse } from "next/server";
-import { getRedis, AR_SCAN_KEY } from "@/lib/redis";
+import { getRedis, arScanKey } from "@/lib/redis";
+import { sanitizeSessionId } from "@/utils/session";
 
 // Polled by the web app; must always hit Redis, never a cached response.
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   const redis = getRedis();
   if (!redis) {
     return NextResponse.json({ hasNewData: false });
   }
 
   try {
-    const dataString = await redis.get(AR_SCAN_KEY);
+    const { searchParams } = new URL(request.url);
+    const sessionId = sanitizeSessionId(searchParams.get("s"));
+    const key = arScanKey(sessionId);
+
+    const dataString = await redis.get(key);
 
     if (dataString) {
       // Consume it so it isn't imported twice.
-      await redis.del(AR_SCAN_KEY);
+      await redis.del(key);
       return NextResponse.json({ hasNewData: true, data: JSON.parse(dataString) });
     }
 
