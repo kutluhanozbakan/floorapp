@@ -70,28 +70,37 @@ export default function FurnitureItem({ item }: Props) {
 
       const snapDistance = 0.5;
       const isDoorOrWindow = item.type === "door" || item.type === "window";
+      const offsetDepth = isDoorOrWindow ? 0 : item.scale[2] / 2;
+      const offsetWidth = isDoorOrWindow ? 0 : item.scale[0] / 2;
 
       const minX = -room.width / 2;
       const maxX = room.width / 2;
       const minZ = -room.depth / 2;
       const maxZ = room.depth / 2;
 
-      // Keep the item inside the room footprint.
-      targetX = Math.min(maxX, Math.max(minX, targetX));
-      targetZ = Math.min(maxZ, Math.max(minZ, targetZ));
-
-      if (Math.abs(targetX - minX) < snapDistance) {
-        targetX = minX;
+      if (targetX - minX < snapDistance + offsetDepth) {
+        targetX = minX + offsetDepth;
         targetRotation = [0, Math.PI / 2, 0];
-      } else if (Math.abs(targetX - maxX) < snapDistance) {
-        targetX = maxX;
+      } else if (maxX - targetX < snapDistance + offsetDepth) {
+        targetX = maxX - offsetDepth;
         targetRotation = [0, -Math.PI / 2, 0];
-      } else if (Math.abs(targetZ - minZ) < snapDistance) {
-        targetZ = minZ;
+      } else if (targetZ - minZ < snapDistance + offsetDepth) {
+        targetZ = minZ + offsetDepth;
         targetRotation = [0, 0, 0];
-      } else if (Math.abs(targetZ - maxZ) < snapDistance) {
-        targetZ = maxZ;
+      } else if (maxZ - targetZ < snapDistance + offsetDepth) {
+        targetZ = maxZ - offsetDepth;
         targetRotation = [0, Math.PI, 0];
+      }
+
+      // Clamp bounds depending on orientation so it doesn't poke out of the room
+      if (Math.abs(targetRotation[1]) === Math.PI / 2) {
+         // Depth is along X, Width is along Z
+         targetX = Math.min(maxX - offsetDepth, Math.max(minX + offsetDepth, targetX));
+         targetZ = Math.min(maxZ - offsetWidth, Math.max(minZ + offsetWidth, targetZ));
+      } else {
+         // Depth is along Z, Width is along X
+         targetX = Math.min(maxX - offsetWidth, Math.max(minX + offsetWidth, targetX));
+         targetZ = Math.min(maxZ - offsetDepth, Math.max(minZ + offsetDepth, targetZ));
       }
 
       let targetY = item.position[1];
@@ -162,6 +171,12 @@ export default function FurnitureItem({ item }: Props) {
           <meshBasicMaterial color={isSelected ? "#3b82f6" : "#94a3b8"} wireframe />
         </mesh>
       )}
+
+      {/* Invisible hit box to make dragging easier on mobile */}
+      <mesh>
+        <boxGeometry args={[1.2, 1.2, 1.2]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
       
       {/* Actual geometry */}
       {renderGeometry()}
