@@ -13,6 +13,11 @@ type PlannerState = ProjectState & {
   isRightPanelOpen: boolean;
   isDraggingItem: boolean;
   isArModalOpen: boolean;
+  showGrid: boolean;
+  // A view command bus: requestView bumps viewTick so CameraController (which
+  // owns the camera/controls) runs the imperative zoom/fit/recenter.
+  viewCmd: "zoomIn" | "zoomOut" | "fit" | "recenter" | null;
+  viewTick: number;
   // Undo/redo stacks of {rooms, furnitureItems} snapshots.
   past: HistorySnapshot[];
   future: HistorySnapshot[];
@@ -20,6 +25,8 @@ type PlannerState = ProjectState & {
   setRightPanelOpen: (open: boolean) => void;
   setDraggingItem: (dragging: boolean) => void;
   setArModalOpen: (open: boolean) => void;
+  toggleGrid: () => void;
+  requestView: (cmd: "zoomIn" | "zoomOut" | "fit" | "recenter") => void;
   setMode: (mode: "2d" | "3d") => void;
   // Capture the current state onto the undo stack BEFORE an interaction mutates
   // it. Callers invoke this once at the start of a discrete change (or once per
@@ -76,6 +83,9 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   isRightPanelOpen: false,
   isDraggingItem: false,
   isArModalOpen: false,
+  showGrid: true,
+  viewCmd: null,
+  viewTick: 0,
   past: [],
   future: [],
 
@@ -83,6 +93,8 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   setRightPanelOpen: (open) => set({ isRightPanelOpen: open }),
   setDraggingItem: (dragging) => set({ isDraggingItem: dragging }),
   setArModalOpen: (open) => set({ isArModalOpen: open }),
+  toggleGrid: () => set((state) => ({ showGrid: !state.showGrid })),
+  requestView: (cmd) => set((state) => ({ viewCmd: cmd, viewTick: state.viewTick + 1 })),
 
   setMode: (mode) => set({ currentMode: mode }),
 

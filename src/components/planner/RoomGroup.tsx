@@ -1,19 +1,21 @@
 import React, { useMemo, useState } from "react";
 import { useThree } from "@react-three/fiber";
 import { useDrag } from "@use-gesture/react";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { Room } from "@/types/planner";
 import { usePlannerStore } from "@/store/plannerStore";
 import Walls from "./Walls";
 import FurnitureItem from "./FurnitureItem";
 import RoomEditor from "./RoomEditor";
+import DragGuides from "./DragGuides";
 
 interface Props {
   room: Room;
 }
 
 export default function RoomGroup({ room }: Props) {
-  const { furnitureItems, updateRoom, selectFurniture, selectedItemId, rooms, setDraggingItem, pushHistory } = usePlannerStore();
+  const { furnitureItems, updateRoom, selectFurniture, selectedItemId, rooms, setDraggingItem, pushHistory, isDraggingItem } = usePlannerStore();
   const { camera, gl } = useThree();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -136,16 +138,33 @@ export default function RoomGroup({ room }: Props) {
         }}
       >
         <planeGeometry args={[room.width, room.depth]} />
-        <meshStandardMaterial color={isSelected ? "#e2e8f0" : isHovered ? "#f1f5f9" : "#f8fafc"} />
+        <meshStandardMaterial color={isSelected ? "#ece7dc" : isHovered ? "#f2eee5" : "#f8f5ef"} />
       </mesh>
 
       <Walls room={room} furnitureItems={roomItems} />
-      
+
+      {/* Persistent room label: name + size + area */}
+      <Html position={[0, 0.05, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
+        <div className="pointer-events-none select-none text-center whitespace-nowrap">
+          <div className="text-ink/70 text-[11px] font-semibold">{room.name}</div>
+          <div className="text-ink-muted/70 text-[10px] tabular-nums">
+            {room.width.toFixed(1)} × {room.depth.toFixed(1)} m · {(room.width * room.depth).toFixed(1)} m²
+          </div>
+        </div>
+      </Html>
+
       {isSelected && !room.isLocked && <RoomEditor room={room} />}
 
       {roomItems.map((item) => (
         <FurnitureItem key={item.id} item={item} room={room} />
       ))}
+
+      {/* Live wall-distance guides for the item being dragged */}
+      {isDraggingItem &&
+        (() => {
+          const dragged = roomItems.find((i) => i.id === selectedItemId);
+          return dragged ? <DragGuides item={dragged} room={room} /> : null;
+        })()}
     </group>
   );
 }
