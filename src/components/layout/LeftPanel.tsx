@@ -1,38 +1,52 @@
 "use client";
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import { generateId } from "@/utils/ids";
 import { FurnitureType } from "@/types/planner";
-import {
-  Armchair, Bed, Table, Box, DoorOpen, LayoutPanelTop, X,
-  Tv, Library, Trees, Lightbulb, Grid3X3, Laptop,
-  Bath, Droplets, Flame, Refrigerator, Archive,
-  Sofa, Coffee, WashingMachine, ShowerHead, Square, CookingPot
-} from "lucide-react";
+import { CATALOG, CATEGORIES, CATALOG_BY_TYPE, defaultYForAdd, type CatalogItem } from "@/utils/catalog";
+import { X, Search, Plus } from "lucide-react";
+
+const RECENTS_KEY = "floorapp_recent_furniture";
+const trLower = (s: string) => s.toLocaleLowerCase("tr");
 
 export default function LeftPanel() {
   const { addFurniture, isLeftPanelOpen, setLeftPanelOpen, addRoom, rooms } = usePlannerStore();
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<string>("Tümü");
+  const [recents, setRecents] = useState<FurnitureType[]>([]);
 
-  const handleAdd = (type: FurnitureType, name: string, scale: [number, number, number]) => {
-    // Windows sit 1m off the floor by default; doors rest on the floor. Everything
-    // else keeps y=0. Setting this on add (not just on drag) keeps the wall cut-out
-    // at the right height immediately.
-    let y = 0;
-    if (type === "window" || type === "mirror") y = 1.0 + scale[1] / 2;
-    else if (type === "door") y = scale[1] / 2;
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(RECENTS_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (raw) setRecents(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+  }, []);
 
-    // Add to the first room or a selected room if we had a specific way.
-    // Since we use global furniture items, they will render in the first room if no roomId,
-    // but better to explicitly assign it to the first room or selected room.
+  const handleAdd = (item: CatalogItem) => {
     addFurniture({
       id: generateId(),
       roomId: rooms[0]?.id,
-      type,
-      name,
-      position: [0, y, 0],
+      type: item.type,
+      name: item.name,
+      position: [0, defaultYForAdd(item.type, item.scale), 0],
       rotation: [0, 0, 0],
-      scale,
+      scale: item.scale,
     });
+
+    // Track recents (most-recent first, max 6).
+    setRecents((prev) => {
+      const next = [item.type, ...prev.filter((t) => t !== item.type)].slice(0, 6);
+      try {
+        localStorage.setItem(RECENTS_KEY, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+
     setLeftPanelOpen(false);
   };
 
@@ -40,7 +54,7 @@ export default function LeftPanel() {
     addRoom({
       id: generateId(),
       name: `Oda ${rooms.length + 1}`,
-      position: [rooms.length * 6, 0, 0], // Offset new room to avoid exact overlap
+      position: [rooms.length * 6, 0, 0],
       width: 5,
       depth: 4,
       wallHeight: 2.8,
@@ -49,53 +63,32 @@ export default function LeftPanel() {
     setLeftPanelOpen(false);
   };
 
-  const furnitureOptions: { type: FurnitureType; name: string; icon: React.ReactNode; scale: [number, number, number] }[] = [
-    { type: "sofa", name: "Koltuk", icon: <Armchair className="w-5 h-5" />, scale: [2, 0.8, 0.9] },
-    { type: "table", name: "Masa", icon: <Table className="w-5 h-5" />, scale: [1.6, 0.75, 0.9] },
-    { type: "wardrobe", name: "Gardırop", icon: <Box className="w-5 h-5" />, scale: [1.2, 2.2, 0.6] },
-    { type: "chair", name: "Sandalye", icon: <Armchair className="w-5 h-5 scale-75" />, scale: [0.5, 0.9, 0.5] },
-    { type: "bed", name: "Yatak", icon: <Bed className="w-5 h-5" />, scale: [1.6, 0.6, 2.0] },
-    { type: "door", name: "Kapı", icon: <DoorOpen className="w-5 h-5" />, scale: [0.9, 2.1, 0.1] },
-    { type: "window", name: "Pencere", icon: <LayoutPanelTop className="w-5 h-5" />, scale: [1.2, 1.2, 0.1] },
-    { type: "tv", name: "TV", icon: <Tv className="w-5 h-5" />, scale: [1.2, 0.8, 0.1] },
-    { type: "bookshelf", name: "Kitaplık", icon: <Library className="w-5 h-5" />, scale: [0.8, 2.0, 0.4] },
-    { type: "plant", name: "Bitki", icon: <Trees className="w-5 h-5" />, scale: [0.4, 1.0, 0.4] },
-    { type: "lamp", name: "Lamba", icon: <Lightbulb className="w-5 h-5" />, scale: [0.3, 1.6, 0.3] },
-    { type: "rug", name: "Halı", icon: <Grid3X3 className="w-5 h-5" />, scale: [2.0, 0.02, 1.5] },
-    { type: "desk", name: "Çalışma Masası", icon: <Laptop className="w-5 h-5" />, scale: [1.2, 0.75, 0.6] },
-    { type: "nightstand", name: "Komodin", icon: <Box className="w-5 h-5 scale-75" />, scale: [0.5, 0.5, 0.4] },
-    { type: "toilet", name: "Klozet", icon: <Bath className="w-5 h-5 scale-75" />, scale: [0.4, 0.8, 0.6] },
-    { type: "sink", name: "Lavabo", icon: <Droplets className="w-5 h-5" />, scale: [0.6, 0.85, 0.5] },
-    { type: "bathtub", name: "Küvet", icon: <Bath className="w-5 h-5" />, scale: [1.7, 0.6, 0.8] },
-    { type: "stove", name: "Ocak", icon: <Flame className="w-5 h-5" />, scale: [0.6, 0.9, 0.6] },
-    { type: "fridge", name: "Buzdolabı", icon: <Refrigerator className="w-5 h-5" />, scale: [0.7, 1.8, 0.7] },
-    { type: "kitchen_cabinet", name: "Mutfak Dolabı", icon: <Archive className="w-5 h-5" />, scale: [0.6, 0.9, 0.6] },
-    { type: "armchair", name: "Berjer", icon: <Sofa className="w-5 h-5 scale-90" />, scale: [0.9, 0.85, 0.9] },
-    { type: "coffee_table", name: "Sehpa", icon: <Coffee className="w-5 h-5" />, scale: [1.1, 0.45, 0.6] },
-    { type: "tv_unit", name: "TV Ünitesi", icon: <Tv className="w-5 h-5 scale-90" />, scale: [1.8, 0.5, 0.45] },
-    { type: "dresser", name: "Şifonyer", icon: <Box className="w-5 h-5" />, scale: [1.0, 0.9, 0.5] },
-    { type: "washing_machine", name: "Çamaşır Mak.", icon: <WashingMachine className="w-5 h-5" />, scale: [0.6, 0.85, 0.6] },
-    { type: "kitchen_counter", name: "Tezgah", icon: <CookingPot className="w-5 h-5" />, scale: [1.2, 0.9, 0.6] },
-    { type: "shower", name: "Duş", icon: <ShowerHead className="w-5 h-5" />, scale: [0.9, 2.1, 0.9] },
-    { type: "mirror", name: "Ayna", icon: <Square className="w-5 h-5" />, scale: [0.7, 1.0, 0.05] },
-  ];
+  const q = trLower(query.trim());
+  const filtered = useMemo(
+    () =>
+      CATALOG.filter((item) => {
+        if (category !== "Tümü" && item.category !== category) return false;
+        if (q && !trLower(item.name).includes(q)) return false;
+        return true;
+      }),
+    [q, category]
+  );
+
+  const recentItems = recents.map((t) => CATALOG_BY_TYPE[t]).filter(Boolean) as CatalogItem[];
+  const showRecents = !q && category === "Tümü" && recentItems.length > 0;
 
   return (
     <>
-      {/* Backdrop (mobile only) */}
       {isLeftPanelOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-20 md:hidden"
-          onClick={() => setLeftPanelOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/40 z-20 md:hidden" onClick={() => setLeftPanelOpen(false)} />
       )}
 
       <aside
-        className={`fixed md:static top-14 bottom-0 md:top-auto md:bottom-auto left-0 z-30 w-64 max-w-[80vw] bg-surface-raised border-r border-line flex flex-col md:h-full shadow-lg md:shadow-sm shrink-0 transition-transform duration-300 md:transition-none ${
+        className={`fixed md:static top-14 bottom-0 md:top-auto md:bottom-auto left-0 z-30 w-64 max-w-[80vw] bg-surface-raised border-r border-line flex flex-col md:h-full shadow-float md:shadow-soft shrink-0 transition-transform duration-300 md:transition-none ${
           isLeftPanelOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
       >
-        <div className="p-4 border-b border-line flex items-center justify-between">
+        <div className="p-4 border-b border-line flex items-center justify-between shrink-0">
           <h2 className="font-semibold text-ink text-sm tracking-wide">Katalog</h2>
           <button
             onClick={() => setLeftPanelOpen(false)}
@@ -105,33 +98,81 @@ export default function LeftPanel() {
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-4 space-y-3 overflow-y-auto">
-          <div className="mb-4">
-             <button
-                onClick={handleAddRoom}
-                className="w-full flex items-center justify-center p-3 bg-brand/10 text-brand hover:bg-brand/15 border border-brand/20 rounded-lg transition-all font-medium text-sm"
-              >
-                + Yeni Oda Ekle
-              </button>
+
+        <div className="p-3 space-y-3 shrink-0 border-b border-line">
+          <button
+            onClick={handleAddRoom}
+            className="w-full flex items-center justify-center gap-1.5 p-2.5 bg-brand/10 text-brand hover:bg-brand/15 border border-brand/20 rounded-control transition-colors font-medium text-sm"
+          >
+            <Plus className="w-4 h-4" /> Yeni Oda Ekle
+          </button>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-ink-muted absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Koltuk, masa, lavabo ara…"
+              className="w-full pl-8 pr-3 py-2 bg-canvas border border-line rounded-control text-sm text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            />
           </div>
 
-          <p className="text-xs text-ink-muted mb-2">Sahneye eklemek için dokun</p>
-          <div className="grid grid-cols-2 gap-3">
-            {furnitureOptions.map((item) => (
+          {/* Category chips */}
+          <div className="flex flex-wrap gap-1">
+            {["Tümü", ...CATEGORIES].map((c) => (
               <button
-                key={item.type}
-                onClick={() => handleAdd(item.type, item.name, item.scale)}
-                className="flex flex-col items-center justify-center p-3 border border-line rounded-lg hover:bg-brand/10 hover:border-brand/40 active:bg-brand/15 transition-all group"
+                key={c}
+                onClick={() => setCategory(c)}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                  category === c ? "bg-brand text-white" : "bg-canvas text-ink-muted hover:text-ink"
+                }`}
               >
-                <div className="text-ink-muted group-hover:text-brand transition-colors mb-2">
-                  {item.icon}
-                </div>
-                <span className="text-xs font-medium text-ink">{item.name}</span>
+                {c}
               </button>
             ))}
           </div>
         </div>
+
+        <div className="p-3 space-y-4 overflow-y-auto">
+          {showRecents && (
+            <div>
+              <p className="text-xs font-medium text-ink-muted mb-2">Son kullanılanlar</p>
+              <div className="grid grid-cols-2 gap-2">
+                {recentItems.map((item) => (
+                  <CatalogButton key={`recent-${item.type}`} item={item} onAdd={handleAdd} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            {showRecents && <p className="text-xs font-medium text-ink-muted mb-2">Tümü</p>}
+            {filtered.length === 0 ? (
+              <p className="text-xs text-ink-muted text-center py-6">Sonuç bulunamadı</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {filtered.map((item) => (
+                  <CatalogButton key={item.type} item={item} onAdd={handleAdd} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </aside>
     </>
+  );
+}
+
+function CatalogButton({ item, onAdd }: { item: CatalogItem; onAdd: (i: CatalogItem) => void }) {
+  return (
+    <button
+      onClick={() => onAdd(item)}
+      className="flex flex-col items-center justify-center p-3 border border-line rounded-control hover:bg-brand/10 hover:border-brand/40 active:bg-brand/15 transition-colors group"
+    >
+      <div className="text-ink-muted group-hover:text-brand transition-colors mb-2">{item.icon}</div>
+      <span className="text-xs font-medium text-ink text-center leading-tight">{item.name}</span>
+    </button>
   );
 }

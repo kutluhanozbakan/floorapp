@@ -112,12 +112,20 @@ export default function CameraController() {
 
   return (
     <>
-      {currentMode === "2d" ? (
-        <OrthographicCamera makeDefault position={[0, 20, 0]} zoom={40} near={0.1} far={1000} />
-      ) : (
-        <PerspectiveCamera makeDefault position={[10, 10, 10]} fov={50} near={0.1} far={1000} />
-      )}
+      <Cameras mode={currentMode} />
       <OrbitControls ref={controlsRef} makeDefault />
     </>
   );
 }
+
+// Memoized so it only re-renders when the mode changes. Without this, any
+// re-render of CameraController (e.g. selecting an object updates the store)
+// would re-apply the declarative position/zoom props and snap the camera back
+// to its default — i.e. clicking an item would reset the view.
+const Cameras = React.memo(function Cameras({ mode }: { mode: "2d" | "3d" }) {
+  return mode === "2d" ? (
+    <OrthographicCamera makeDefault position={[0, 20, 0]} zoom={40} near={0.1} far={1000} />
+  ) : (
+    <PerspectiveCamera makeDefault position={[10, 10, 10]} fov={50} near={0.1} far={1000} />
+  );
+});
