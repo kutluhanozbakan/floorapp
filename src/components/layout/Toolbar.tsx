@@ -208,11 +208,19 @@ export default function Toolbar() {
 
             <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4 text-center">
               <p className="text-sm text-slate-600 mb-2">
-                Open the iOS Scanner app and enter this URL to send the scan:
+                Open this page on your phone to enter and send a room:
               </p>
               <div className="font-mono text-sm font-bold text-slate-800 bg-white border border-slate-300 py-2 px-1 rounded break-all">
-                {typeof window !== "undefined" ? `${window.location.origin}/api/ar` : "/api/ar"}
+                {typeof window !== "undefined" ? `${window.location.origin}/scan` : "/scan"}
               </div>
+              <a
+                href="/scan"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-3 text-sm font-medium text-indigo-600 hover:text-indigo-800 underline"
+              >
+                Open the send page →
+              </a>
             </div>
 
             <div className="flex items-center justify-center space-x-2 text-sm text-indigo-600 font-medium animate-pulse">
