@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useThree, ThreeEvent } from "@react-three/fiber";
 import { useDrag } from "@use-gesture/react";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { FurnitureItem as FurnitureItemType, Room } from "@/types/planner";
 import { usePlannerStore } from "@/store/plannerStore";
@@ -22,7 +23,7 @@ interface Props {
 export default function FurnitureItem({ item, room }: Props) {
   const meshRef = useRef<THREE.Group>(null);
   const { camera, gl } = useThree();
-  const { selectFurniture, selectedItemId, updateFurniture, setDraggingItem } = usePlannerStore();
+  const { furnitureItems, selectFurniture, selectedItemId, updateFurniture, setDraggingItem, isDraggingItem } = usePlannerStore();
   const [isHovered, setIsHovered] = useState(false);
 
   const isSelected = selectedItemId === item.id;
@@ -111,10 +112,41 @@ export default function FurnitureItem({ item, room }: Props) {
         targetY = item.scale[1] / 2;
       }
 
-      updateFurniture(item.id, {
-        position: [targetX, targetY, targetZ],
-        rotation: targetRotation as [number, number, number],
-      });
+      // Check for overlap with other furniture items
+      const isRotated = Math.abs(targetRotation[1]) === Math.PI / 2;
+      const newW = isRotated ? item.scale[2] : item.scale[0];
+      const newD = isRotated ? item.scale[0] : item.scale[2];
+      // Slightly reduce bounding box to allow sliding past tightly packed items
+      const margin = 0.05; 
+      const nMinX = targetX - newW / 2 + margin;
+      const nMaxX = targetX + newW / 2 - margin;
+      const nMinZ = targetZ - newD / 2 + margin;
+      const nMaxZ = targetZ + newD / 2 - margin;
+
+      let hasOverlap = false;
+      for (const other of furnitureItems) {
+        if (other.id === item.id || other.roomId !== room.id) continue;
+        
+        const oIsRotated = Math.abs(other.rotation[1]) === Math.PI / 2;
+        const oW = oIsRotated ? other.scale[2] : other.scale[0];
+        const oD = oIsRotated ? other.scale[0] : other.scale[2];
+        const oMinX = other.position[0] - oW / 2 + margin;
+        const oMaxX = other.position[0] + oW / 2 - margin;
+        const oMinZ = other.position[2] - oD / 2 + margin;
+        const oMaxZ = other.position[2] + oD / 2 - margin;
+        
+        if (nMinX < oMaxX && nMaxX > oMinX && nMinZ < oMaxZ && nMaxZ > oMinZ) {
+           hasOverlap = true;
+           break;
+        }
+      }
+
+      if (!hasOverlap) {
+        updateFurniture(item.id, {
+          position: [targetX, targetY, targetZ],
+          rotation: targetRotation as [number, number, number],
+        });
+      }
 
       if (last) {
         setDraggingItem(false);
@@ -183,6 +215,18 @@ export default function FurnitureItem({ item, room }: Props) {
       
       {/* Actual geometry */}
       {renderGeometry()}
+
+      {/* Hover dimensions overlay */}
+      {isHovered && !isDraggingItem && (
+        <Html position={[0, item.scale[1] / 2 + 0.2, 0]} center zIndexRange={[100, 0]}>
+          <div className="bg-slate-800/90 backdrop-blur-sm text-white px-3 py-1.5 rounded shadow-xl pointer-events-none border border-slate-600/50">
+            <div className="font-semibold text-xs mb-0.5">{item.name}</div>
+            <div className="text-[10px] text-slate-300 whitespace-nowrap">
+              {item.scale[0].toFixed(2)}W × {item.scale[1].toFixed(2)}H × {item.scale[2].toFixed(2)}D (m)
+            </div>
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
