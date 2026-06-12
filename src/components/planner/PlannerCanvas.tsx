@@ -3,12 +3,11 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import CameraController from "./CameraController";
-import Room from "./Room";
-import FurnitureRenderer from "./FurnitureRenderer";
+import RoomGroup from "./RoomGroup";
 import { usePlannerStore } from "@/store/plannerStore";
 
 export default function PlannerCanvas() {
-  const { selectFurniture, loadProject } = usePlannerStore();
+  const { selectFurniture, loadProject, rooms } = usePlannerStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -38,8 +37,9 @@ export default function PlannerCanvas() {
           <orthographicCamera attach="shadow-camera" args={[-20, 20, 20, -20]} />
         </directionalLight>
 
-        <Room />
-        <FurnitureRenderer />
+        {rooms.map(room => (
+          <RoomGroup key={room.id} room={room} />
+        ))}
       </Suspense>
     </Canvas>
   );

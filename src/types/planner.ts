@@ -1,4 +1,7 @@
 export type Room = {
+  id: string;
+  name: string;
+  position: [number, number, number];
   width: number;
   depth: number;
   wallHeight: number;
@@ -9,6 +12,7 @@ export type FurnitureType = "sofa" | "table" | "wardrobe" | "chair" | "bed" | "d
 
 export type FurnitureItem = {
   id: string;
+  roomId?: string; // Optional for backward compatibility or global items
   type: FurnitureType;
   name: string;
   position: [number, number, number];
@@ -17,6 +21,6 @@ export type FurnitureItem = {
 };
 
 export type ProjectState = {
-  room: Room;
+  rooms: Room[];
   furnitureItems: FurnitureItem[];
 };

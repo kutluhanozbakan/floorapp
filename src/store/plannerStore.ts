@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { FurnitureItem, ProjectState, Room } from "@/types/planner";
 import { loadProjectFromStorage, saveProjectToStorage } from "@/utils/storage";
@@ -12,11 +13,13 @@ type PlannerState = ProjectState & {
   setRightPanelOpen: (open: boolean) => void;
   setDraggingItem: (dragging: boolean) => void;
   setMode: (mode: "2d" | "3d") => void;
+  addRoom: (room: Room) => void;
+  updateRoom: (id: string, data: Partial<Room>) => void;
+  deleteRoom: (id: string) => void;
   addFurniture: (item: FurnitureItem) => void;
   updateFurniture: (id: string, data: Partial<FurnitureItem>) => void;
   deleteFurniture: (id: string) => void;
-  selectFurniture: (id: string | null) => void;
-  updateRoom: (data: Partial<Room>) => void;
+  selectFurniture: (id: string | null) => void; // Selects either a room or a furniture item
   saveProject: () => void;
   loadProject: () => void;
   importProject: (state: ProjectState) => void;
@@ -24,6 +27,9 @@ type PlannerState = ProjectState & {
 };
 
 const defaultRoom: Room = {
+  id: "room-1",
+  name: "Living Room",
+  position: [0, 0, 0],
   width: 5,
   depth: 4,
   wallHeight: 2.8,
@@ -31,7 +37,7 @@ const defaultRoom: Room = {
 };
 
 const defaultState: ProjectState = {
-  room: defaultRoom,
+  rooms: [defaultRoom],
   furnitureItems: [],
 };
 
@@ -48,6 +54,26 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   setDraggingItem: (dragging) => set({ isDraggingItem: dragging }),
 
   setMode: (mode) => set({ currentMode: mode }),
+
+  addRoom: (room) =>
+    set((state) => ({
+      rooms: [...state.rooms, room],
+      selectedItemId: room.id,
+    })),
+
+  updateRoom: (id, data) =>
+    set((state) => ({
+      rooms: state.rooms.map((room) =>
+        room.id === id ? { ...room, ...data } : room
+      ),
+    })),
+
+  deleteRoom: (id) =>
+    set((state) => ({
+      rooms: state.rooms.filter((room) => room.id !== id),
+      furnitureItems: state.furnitureItems.filter((item) => item.roomId !== id),
+      selectedItemId: state.selectedItemId === id ? null : state.selectedItemId,
+    })),
 
   addFurniture: (item) =>
     set((state) => ({
@@ -70,31 +96,50 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
 
   selectFurniture: (id) => set({ selectedItemId: id }),
 
-  updateRoom: (data) =>
-    set((state) => ({
-      room: { ...state.room, ...data },
-    })),
-
   saveProject: () => {
-    const { room, furnitureItems } = get();
-    saveProjectToStorage({ room, furnitureItems });
+    const { rooms, furnitureItems } = get();
+    saveProjectToStorage({ rooms, furnitureItems });
   },
 
   loadProject: () => {
     const savedState = loadProjectFromStorage();
     if (savedState) {
+      // Backward compatibility for old single room projects
+      let rooms = savedState.rooms;
+      if (!rooms && (savedState as any).room) {
+        const oldRoom = (savedState as any).room;
+        rooms = [{
+          ...oldRoom,
+          id: "room-1",
+          name: "Room 1",
+          position: [0, 0, 0],
+        }];
+      }
+
       set({
-        room: savedState.room,
-        furnitureItems: savedState.furnitureItems,
+        rooms: rooms || defaultState.rooms,
+        furnitureItems: savedState.furnitureItems || [],
         selectedItemId: null,
       });
     }
   },
 
   importProject: (state) => {
+    // Backward compatibility
+    let rooms = state.rooms;
+    if (!rooms && (state as any).room) {
+      const oldRoom = (state as any).room;
+      rooms = [{
+        ...oldRoom,
+        id: "room-1",
+        name: "Imported Room",
+        position: [0, 0, 0],
+      }];
+    }
+
     set({
-      room: state.room,
-      furnitureItems: state.furnitureItems,
+      rooms: rooms || defaultState.rooms,
+      furnitureItems: state.furnitureItems || [],
       selectedItemId: null,
     });
   },

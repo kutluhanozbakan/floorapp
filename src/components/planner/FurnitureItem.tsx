@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { useThree, ThreeEvent } from "@react-three/fiber";
 import { useDrag } from "@use-gesture/react";
 import * as THREE from "three";
-import { FurnitureItem as FurnitureItemType } from "@/types/planner";
+import { FurnitureItem as FurnitureItemType, Room } from "@/types/planner";
 import { usePlannerStore } from "@/store/plannerStore";
 
 // Import geometries
@@ -16,12 +16,13 @@ import Window from "../furniture/Window";
 
 interface Props {
   item: FurnitureItemType;
+  room: Room;
 }
 
-export default function FurnitureItem({ item }: Props) {
+export default function FurnitureItem({ item, room }: Props) {
   const meshRef = useRef<THREE.Group>(null);
   const { camera, gl } = useThree();
-  const { selectFurniture, selectedItemId, updateFurniture, room, setDraggingItem } = usePlannerStore();
+  const { selectFurniture, selectedItemId, updateFurniture, setDraggingItem } = usePlannerStore();
   const [isHovered, setIsHovered] = useState(false);
 
   const isSelected = selectedItemId === item.id;
@@ -55,17 +56,19 @@ export default function FurnitureItem({ item }: Props) {
         return memo;
       }
 
+      const localHitPoint = hitPoint.clone().sub(new THREE.Vector3(...room.position));
+
       // On grab, remember the offset between the pointer and the item's origin so
       // the item doesn't snap its center to the finger/cursor.
       if (first || !memo) {
         memo = {
-          offsetX: item.position[0] - hitPoint.x,
-          offsetZ: item.position[2] - hitPoint.z,
+          offsetX: item.position[0] - localHitPoint.x,
+          offsetZ: item.position[2] - localHitPoint.z,
         };
       }
 
-      let targetX = hitPoint.x + memo.offsetX;
-      let targetZ = hitPoint.z + memo.offsetZ;
+      let targetX = localHitPoint.x + memo.offsetX;
+      let targetZ = localHitPoint.z + memo.offsetZ;
       let targetRotation = item.rotation;
 
       const snapDistance = 0.5;

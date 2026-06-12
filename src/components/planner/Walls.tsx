@@ -1,11 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useMemo } from "react";
-import { usePlannerStore } from "@/store/plannerStore";
 import * as THREE from "three";
 import { CSG } from "three-csg-ts";
+import { Room, FurnitureItem } from "@/types/planner";
 
-export default function Walls() {
-  const { room, furnitureItems } = usePlannerStore();
+interface Props {
+  room: Room;
+  furnitureItems: FurnitureItem[];
+}
+
+export default function Walls({ room, furnitureItems }: Props) {
   const { width, depth, wallHeight, wallThickness } = room;
 
   const walls = useMemo(() => {
@@ -36,7 +40,6 @@ export default function Walls() {
       let rCSG = CSG.fromMesh(rightWall);
 
       cutObjects.forEach(obj => {
-        // Create a cutter that is slightly thicker than the wall to avoid z-fighting / unclean cuts
         const cutter = new THREE.Mesh(new THREE.BoxGeometry(obj.scale[0], obj.scale[1], wallThickness + 0.5));
         cutter.position.set(obj.position[0], obj.position[1], obj.position[2]);
         cutter.rotation.set(obj.rotation[0], obj.rotation[1], obj.rotation[2]);
@@ -56,7 +59,6 @@ export default function Walls() {
       rightWall = CSG.toMesh(rCSG, new THREE.Matrix4(), material);
     }
     
-    // Ensure they cast and receive shadows
     [backWall, frontWall, leftWall, rightWall].forEach(w => {
       w.castShadow = true;
       w.receiveShadow = true;

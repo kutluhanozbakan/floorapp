@@ -6,19 +6,34 @@ import { FurnitureType } from "@/types/planner";
 import { Armchair, Bed, Table, Box, DoorOpen, LayoutPanelTop, X } from "lucide-react";
 
 export default function LeftPanel() {
-  const { addFurniture, isLeftPanelOpen, setLeftPanelOpen } = usePlannerStore();
+  const { addFurniture, isLeftPanelOpen, setLeftPanelOpen, addRoom, rooms } = usePlannerStore();
 
   const handleAdd = (type: FurnitureType, name: string, scale: [number, number, number]) => {
+    // Add to the first room or a selected room if we had a specific way.
+    // Since we use global furniture items, they will render in the first room if no roomId,
+    // but better to explicitly assign it to the first room or selected room.
     addFurniture({
       id: generateId(),
+      roomId: rooms[0]?.id,
       type,
       name,
-      // Place new furniture in the middle of the room roughly, y is 0
       position: [0, 0, 0],
       rotation: [0, 0, 0],
       scale,
     });
-    // On mobile, close the drawer so the user can see and drag the new item.
+    setLeftPanelOpen(false);
+  };
+
+  const handleAddRoom = () => {
+    addRoom({
+      id: generateId(),
+      name: `Room ${rooms.length + 1}`,
+      position: [rooms.length * 6, 0, 0], // Offset new room to avoid exact overlap
+      width: 5,
+      depth: 4,
+      wallHeight: 2.8,
+      wallThickness: 0.2,
+    });
     setLeftPanelOpen(false);
   };
 
@@ -58,6 +73,15 @@ export default function LeftPanel() {
           </button>
         </div>
         <div className="p-4 space-y-3 overflow-y-auto">
+          <div className="mb-4">
+             <button
+                onClick={handleAddRoom}
+                className="w-full flex items-center justify-center p-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all font-medium text-sm"
+              >
+                + Add New Room
+              </button>
+          </div>
+          
           <p className="text-xs text-slate-500 mb-2">Tap to add to scene</p>
           <div className="grid grid-cols-2 gap-3">
             {furnitureOptions.map((item) => (

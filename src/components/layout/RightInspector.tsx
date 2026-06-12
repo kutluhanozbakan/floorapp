@@ -4,9 +4,10 @@ import { usePlannerStore } from "@/store/plannerStore";
 import { X } from "lucide-react";
 
 export default function RightInspector() {
-  const { room, updateRoom, furnitureItems, selectedItemId, updateFurniture, deleteFurniture, isRightPanelOpen, setRightPanelOpen } = usePlannerStore();
+  const { rooms, updateRoom, deleteRoom, furnitureItems, selectedItemId, updateFurniture, deleteFurniture, isRightPanelOpen, setRightPanelOpen } = usePlannerStore();
 
   const selectedItem = furnitureItems.find((i) => i.id === selectedItemId);
+  const selectedRoom = rooms.find((r) => r.id === selectedItemId);
 
   return (
     <>
@@ -33,44 +34,63 @@ export default function RightInspector() {
             <X className="w-5 h-5" />
           </button>
         </div>
-      <div className="p-4 space-y-4 border-b border-slate-200">
-        <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Width (X) - meters</label>
-          <input
-            type="number"
-            value={room.width}
-            onChange={(e) => updateRoom({ width: parseFloat(e.target.value) || 1 })}
-            className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            min={1}
-            max={50}
-            step={0.5}
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Depth (Z) - meters</label>
-          <input
-            type="number"
-            value={room.depth}
-            onChange={(e) => updateRoom({ depth: parseFloat(e.target.value) || 1 })}
-            className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            min={1}
-            max={50}
-            step={0.5}
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Wall Height</label>
-          <input
-            type="number"
-            value={room.wallHeight}
-            onChange={(e) => updateRoom({ wallHeight: parseFloat(e.target.value) || 1 })}
-            className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            min={1}
-            max={10}
-            step={0.1}
-          />
-        </div>
-      </div>
+        {selectedRoom && (
+          <div className="p-4 space-y-4 border-b border-slate-200">
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Room Name</label>
+              <input
+                type="text"
+                value={selectedRoom.name}
+                onChange={(e) => updateRoom(selectedRoom.id, { name: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Width (X) - meters</label>
+              <input
+                type="number"
+                value={selectedRoom.width.toFixed(2)}
+                onChange={(e) => updateRoom(selectedRoom.id, { width: parseFloat(e.target.value) || 1 })}
+                className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                min={1} max={50} step={0.5}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Depth (Z) - meters</label>
+              <input
+                type="number"
+                value={selectedRoom.depth.toFixed(2)}
+                onChange={(e) => updateRoom(selectedRoom.id, { depth: parseFloat(e.target.value) || 1 })}
+                className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                min={1} max={50} step={0.5}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Wall Height</label>
+              <input
+                type="number"
+                value={selectedRoom.wallHeight.toFixed(2)}
+                onChange={(e) => updateRoom(selectedRoom.id, { wallHeight: parseFloat(e.target.value) || 1 })}
+                className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                min={1} max={10} step={0.1}
+              />
+            </div>
+            {rooms.length > 1 && (
+              <div className="pt-2">
+                <button
+                  onClick={() => {
+                    if (confirm("Are you sure you want to delete this room and all its furniture?")) {
+                      deleteRoom(selectedRoom.id);
+                    }
+                  }}
+                  className="w-full py-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded text-sm font-medium transition-colors"
+                >
+                  Delete Room
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
       <div className="p-4 border-b border-slate-200 bg-slate-50">
         <h2 className="font-semibold text-slate-800 text-sm uppercase tracking-wider">Selected Object</h2>
@@ -175,11 +195,11 @@ export default function RightInspector() {
               </button>
           </div>
         </div>
-      ) : (
+      ) : !selectedRoom ? (
         <div className="p-8 text-center text-slate-400 text-sm">
-          Select an object in the scene to edit its properties.
+          Select a room or an object to edit its properties.
         </div>
-      )}
+      ) : null}
       </aside>
     </>
   );
