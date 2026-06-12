@@ -1,21 +1,25 @@
-import { NextResponse } from 'next/server';
-import Redis from 'ioredis';
+import { NextResponse } from "next/server";
+import { getRedis, AR_SCAN_KEY } from "@/lib/redis";
 
-// Use a global to prevent connection limits in development (Next.js hot reloads)
-const globalForRedis = global as unknown as { redis: Redis | undefined };
-
-export const redis = globalForRedis.redis || new Redis(process.env.REDIS_URL || "");
-
-if (process.env.NODE_ENV !== 'production') globalForRedis.redis = redis;
+// AR scans must never be cached and run on demand.
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  const redis = getRedis();
+  if (!redis) {
+    return NextResponse.json(
+      { success: false, error: "Redis is not configured (missing UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN)" },
+      { status: 500 }
+    );
+  }
+
   try {
     const data = await request.json();
-    
-    // Store data in Redis with an expiration of 2 minutes (120 seconds)
-    // The web app fetches it within a few seconds, so 120s is safe.
-    await redis.set('latest_ar_scan', JSON.stringify(data), 'EX', 120);
-    
+
+    // Store with a 120s expiry. The web app polls and imports within seconds.
+    // @upstash/redis serializes the object to JSON automatically.
+    await redis.set(AR_SCAN_KEY, data, { ex: 120 });
+
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Redis Set Error:", err);

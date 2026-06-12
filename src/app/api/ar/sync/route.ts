@@ -1,23 +1,25 @@
-import { NextResponse } from 'next/server';
-import Redis from 'ioredis';
+import { NextResponse } from "next/server";
+import { getRedis, AR_SCAN_KEY } from "@/lib/redis";
 
-const globalForRedis = global as unknown as { redis: Redis | undefined };
-export const redis = globalForRedis.redis || new Redis(process.env.REDIS_URL || "");
-
-if (process.env.NODE_ENV !== 'production') globalForRedis.redis = redis;
+// Polled by the web app; must always hit Redis, never a cached response.
+export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const redis = getRedis();
+  if (!redis) {
+    return NextResponse.json({ hasNewData: false });
+  }
+
   try {
-    // Check if the key exists
-    const dataString = await redis.get('latest_ar_scan');
-    
-    if (dataString) {
-      // Data found! Delete it immediately so it doesn't get imported twice
-      await redis.del('latest_ar_scan');
-      
-      return NextResponse.json({ hasNewData: true, data: JSON.parse(dataString) });
+    // @upstash/redis deserializes the stored JSON back into an object.
+    const data = await redis.get(AR_SCAN_KEY);
+
+    if (data) {
+      // Consume it so it isn't imported twice.
+      await redis.del(AR_SCAN_KEY);
+      return NextResponse.json({ hasNewData: true, data });
     }
-    
+
     return NextResponse.json({ hasNewData: false });
   } catch (err) {
     console.error("Redis Get Error:", err);

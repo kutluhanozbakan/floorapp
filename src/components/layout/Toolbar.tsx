@@ -25,7 +25,7 @@ export default function Toolbar() {
         } catch {
           // ignore network errors during polling
         }
-      }, 2000);
+      }, 3000);
     }
     return () => clearInterval(interval);
   }, [isArModalOpen, importProject]);
