@@ -4,7 +4,15 @@ import QRCode from "qrcode";
 import { usePlannerStore } from "@/store/plannerStore";
 import { exportProjectToJson } from "@/utils/storage";
 import { getClientId } from "@/utils/session";
+import { Button, IconButton, Panel, SegmentedControl, type SegmentOption } from "@/components/ui";
 import { Save, Download, Upload, Trash2, Box, Map, Smartphone, PanelLeft, SlidersHorizontal, MoreVertical } from "lucide-react";
+
+type Mode = "2d" | "3d";
+
+const modeOptions: SegmentOption<Mode>[] = [
+  { value: "2d", label: "2D Plan", icon: <Map className="w-4 h-4" />, hideLabelOnMobile: true },
+  { value: "3d", label: "3D Görünüm", icon: <Box className="w-4 h-4" />, hideLabelOnMobile: true },
+];
 
 export default function Toolbar() {
   const { currentMode, setMode, saveProject, importProject, resetProject, setLeftPanelOpen, setRightPanelOpen, isArModalOpen, setArModalOpen } = usePlannerStore();
@@ -59,13 +67,11 @@ export default function Toolbar() {
     <div className="h-14 md:h-16 bg-surface border-b border-line flex items-center justify-between px-3 md:px-6 shrink-0 z-40 shadow-soft gap-2">
       {/* Left: catalog toggle (mobile) + logo */}
       <div className="flex items-center gap-2 min-w-0">
-        <button
-          onClick={() => setLeftPanelOpen(true)}
-          className="md:hidden flex items-center justify-center w-9 h-9 rounded-control text-ink-muted hover:bg-canvas active:bg-canvas transition-colors"
-          aria-label="Kataloğu aç"
-        >
-          <PanelLeft className="w-5 h-5" />
-        </button>
+        <span className="md:hidden">
+          <IconButton label="Kataloğu aç" onClick={() => setLeftPanelOpen(true)}>
+            <PanelLeft className="w-5 h-5" />
+          </IconButton>
+        </span>
         <div className="w-8 h-8 bg-brand rounded-control flex items-center justify-center text-white font-bold text-base shrink-0">
           F
         </div>
@@ -73,107 +79,62 @@ export default function Toolbar() {
       </div>
 
       {/* Center: 2D / 3D toggle */}
-      <div className="flex items-center bg-canvas p-1 rounded-control shrink-0">
-        <button
-          onClick={() => setMode("2d")}
-          className={`flex items-center px-3 md:px-4 py-1.5 rounded-control text-sm font-medium transition-colors ${
-            currentMode === "2d" ? "bg-surface-raised shadow-soft text-brand" : "text-ink-muted hover:text-ink"
-          }`}
-        >
-          <Map className="w-4 h-4 md:mr-2" />
-          <span className="hidden md:inline">2D Plan</span>
-        </button>
-        <button
-          onClick={() => setMode("3d")}
-          className={`flex items-center px-3 md:px-4 py-1.5 rounded-control text-sm font-medium transition-colors ${
-            currentMode === "3d" ? "bg-surface-raised shadow-soft text-brand" : "text-ink-muted hover:text-ink"
-          }`}
-        >
-          <Box className="w-4 h-4 md:mr-2" />
-          <span className="hidden md:inline">3D Görünüm</span>
-        </button>
-      </div>
+      <SegmentedControl<Mode>
+        ariaLabel="Görünüm modu"
+        value={currentMode}
+        onChange={setMode}
+        options={modeOptions}
+      />
 
       {/* Right: desktop actions */}
       <div className="hidden md:flex items-center space-x-3">
-        <button
-          onClick={saveProject}
-          className="flex items-center px-3 py-1.5 text-sm font-medium text-ink bg-surface-raised border border-line rounded-control hover:bg-canvas transition-colors"
-          title="Tarayıcıya kaydet"
-        >
-          <Save className="w-4 h-4 mr-1.5" />
+        <Button variant="secondary" icon={<Save className="w-4 h-4" />} onClick={saveProject} title="Tarayıcıya kaydet">
           Kaydet
-        </button>
+        </Button>
 
         <div className="w-px h-6 bg-line mx-1"></div>
 
-        <button
-          onClick={() => exportProjectToJson(usePlannerStore.getState())}
-          className="flex items-center px-3 py-1.5 text-sm font-medium text-ink bg-surface-raised border border-line rounded-control hover:bg-canvas transition-colors"
-          title="JSON dışa aktar"
-        >
-          <Download className="w-4 h-4 mr-1.5" />
+        <Button variant="secondary" icon={<Download className="w-4 h-4" />} onClick={() => exportProjectToJson(usePlannerStore.getState())} title="JSON dışa aktar">
           Dışa Aktar
-        </button>
-        <button
-          onClick={handleImportClick}
-          className="flex items-center px-3 py-1.5 text-sm font-medium text-ink bg-surface-raised border border-line rounded-control hover:bg-canvas transition-colors"
-          title="JSON içe aktar"
-        >
-          <Upload className="w-4 h-4 mr-1.5" />
+        </Button>
+        <Button variant="secondary" icon={<Upload className="w-4 h-4" />} onClick={handleImportClick} title="JSON içe aktar">
           İçe Aktar
-        </button>
+        </Button>
 
         <div className="w-px h-6 bg-line mx-1"></div>
 
-        <button
-          onClick={() => setArModalOpen(true)}
-          className="flex items-center px-3 py-1.5 text-sm font-medium text-white bg-brand rounded-control hover:bg-brand-strong transition-colors"
-        >
-          <Smartphone className="w-4 h-4 mr-1.5" />
+        <Button variant="primary" icon={<Smartphone className="w-4 h-4" />} onClick={() => setArModalOpen(true)}>
           Telefona Bağlan
-        </button>
+        </Button>
 
         <div className="w-px h-6 bg-line mx-1"></div>
 
-        <button
-          onClick={handleReset}
-          className="flex items-center px-3 py-1.5 text-sm font-medium text-danger bg-danger/10 border border-danger/20 rounded-control hover:bg-danger/15 transition-colors"
-        >
-          <Trash2 className="w-4 h-4 mr-1.5" />
+        <Button variant="danger" icon={<Trash2 className="w-4 h-4" />} onClick={handleReset}>
           Sıfırla
-        </button>
+        </Button>
       </div>
 
       {/* Right: mobile actions (inspector toggle + overflow menu) */}
       <div className="flex md:hidden items-center gap-1 shrink-0">
-        <button
-          onClick={() => setRightPanelOpen(true)}
-          className="flex items-center justify-center w-9 h-9 rounded-control text-ink-muted hover:bg-canvas active:bg-canvas transition-colors"
-          aria-label="Özellikleri aç"
-        >
+        <IconButton label="Özellikleri aç" onClick={() => setRightPanelOpen(true)}>
           <SlidersHorizontal className="w-5 h-5" />
-        </button>
+        </IconButton>
         <div className="relative">
-          <button
-            onClick={() => setIsMenuOpen((v) => !v)}
-            className="flex items-center justify-center w-9 h-9 rounded-control text-ink-muted hover:bg-canvas active:bg-canvas transition-colors"
-            aria-label="Diğer işlemler"
-          >
+          <IconButton label="Diğer işlemler" onClick={() => setIsMenuOpen((v) => !v)}>
             <MoreVertical className="w-5 h-5" />
-          </button>
+          </IconButton>
 
           {isMenuOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
-              <div className="absolute right-0 top-11 z-50 w-52 bg-surface-raised border border-line rounded-panel shadow-float py-1 overflow-hidden">
+              <Panel raised className="absolute right-0 top-11 z-50 w-52 py-1 overflow-hidden">
                 <MenuItem icon={<Save className="w-4 h-4" />} label="Kaydet" onClick={() => { saveProject(); setIsMenuOpen(false); }} />
                 <MenuItem icon={<Download className="w-4 h-4" />} label="JSON dışa aktar" onClick={() => { exportProjectToJson(usePlannerStore.getState()); setIsMenuOpen(false); }} />
                 <MenuItem icon={<Upload className="w-4 h-4" />} label="JSON içe aktar" onClick={() => { handleImportClick(); setIsMenuOpen(false); }} />
                 <MenuItem icon={<Smartphone className="w-4 h-4 text-brand" />} label="Telefona Bağlan" onClick={() => { setArModalOpen(true); setIsMenuOpen(false); }} />
                 <div className="my-1 border-t border-line" />
                 <MenuItem icon={<Trash2 className="w-4 h-4" />} label="Sıfırla" danger onClick={() => { setIsMenuOpen(false); handleReset(); }} />
-              </div>
+              </Panel>
             </>
           )}
         </div>
@@ -189,15 +150,15 @@ export default function Toolbar() {
 
       {isArModalOpen && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-surface-raised rounded-panel shadow-float w-full max-w-sm p-6">
+          <Panel raised className="w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-ink flex items-center">
                 <Smartphone className="w-5 h-5 mr-2 text-brand" />
                 Telefona Bağlan
               </h3>
-              <button onClick={() => setArModalOpen(false)} className="text-ink-muted hover:text-ink" aria-label="Kapat">
-                ✕
-              </button>
+              <IconButton label="Kapat" onClick={() => setArModalOpen(false)}>
+                <span aria-hidden className="text-base leading-none">✕</span>
+              </IconButton>
             </div>
 
             <div className="bg-canvas p-4 rounded-panel border border-line mb-4 text-center">
@@ -235,7 +196,7 @@ export default function Toolbar() {
               <div className="w-2 h-2 rounded-full bg-brand"></div>
               <span>Taramalar dinleniyor...</span>
             </div>
-          </div>
+          </Panel>
         </div>
       )}
     </div>
