@@ -1,21 +1,33 @@
-import { Redis } from "@upstash/redis";
+import Redis from "ioredis";
 
-// Upstash REST client. Works reliably on Vercel serverless (plain HTTP, no
-// long-lived TCP connection). Reads credentials from env so the build never
-// crashes when they're missing — callers get `null` and degrade gracefully.
-let client: Redis | null = null;
+// Vercel's managed Redis (Redis Cloud, host *.db.redis.io) only exposes a TCP
+// connection string via REDIS_URL — there is no HTTP/REST endpoint, so we use
+// ioredis.
+//
+// On Vercel's serverless runtime the module can be re-evaluated and instances
+// reused while warm, so we cache the client on globalThis to avoid opening a new
+// connection on every invocation (which would exhaust the connection limit).
+const g = globalThis as unknown as { _redis?: Redis };
 
 export function getRedis(): Redis | null {
-  if (client) return client;
+  const url = process.env.REDIS_URL;
+  if (!url) return null;
 
-  // Accept whichever REST credentials are present. Vercel's managed Redis
-  // (Upstash under the hood) injects KV_REST_API_* via the Storage/Marketplace
-  // integration; a standalone Upstash DB uses UPSTASH_REDIS_REST_*.
-  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
-  if (!url || !token) return null;
+  if (g._redis) return g._redis;
 
-  client = new Redis({ url, token });
+  const client = new Redis(url, {
+    // Fail fast instead of hanging the serverless function on a bad connection.
+    maxRetriesPerRequest: 3,
+    connectTimeout: 10_000,
+  });
+
+  // Without an 'error' listener, ioredis emits an unhandled error event that can
+  // crash the function. Log and let per-request try/catch handle the failure.
+  client.on("error", (err) => {
+    console.error("Redis connection error:", err?.message || err);
+  });
+
+  g._redis = client;
   return client;
 }
 

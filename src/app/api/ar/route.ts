@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const redis = getRedis();
   if (!redis) {
     return NextResponse.json(
-      { success: false, error: "Redis is not configured (missing KV_REST_API_URL/TOKEN or UPSTASH_REDIS_REST_URL/TOKEN)" },
+      { success: false, error: "Redis is not configured (missing REDIS_URL)" },
       { status: 500 }
     );
   }
@@ -17,8 +17,7 @@ export async function POST(request: Request) {
     const data = await request.json();
 
     // Store with a 120s expiry. The web app polls and imports within seconds.
-    // @upstash/redis serializes the object to JSON automatically.
-    await redis.set(AR_SCAN_KEY, data, { ex: 120 });
+    await redis.set(AR_SCAN_KEY, JSON.stringify(data), "EX", 120);
 
     return NextResponse.json({ success: true });
   } catch (err) {

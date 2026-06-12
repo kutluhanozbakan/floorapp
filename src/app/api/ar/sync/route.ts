@@ -11,13 +11,12 @@ export async function GET() {
   }
 
   try {
-    // @upstash/redis deserializes the stored JSON back into an object.
-    const data = await redis.get(AR_SCAN_KEY);
+    const dataString = await redis.get(AR_SCAN_KEY);
 
-    if (data) {
+    if (dataString) {
       // Consume it so it isn't imported twice.
       await redis.del(AR_SCAN_KEY);
-      return NextResponse.json({ hasNewData: true, data });
+      return NextResponse.json({ hasNewData: true, data: JSON.parse(dataString) });
     }
 
     return NextResponse.json({ hasNewData: false });
