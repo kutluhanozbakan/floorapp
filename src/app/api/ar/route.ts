@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const redis = getRedis();
   if (!redis) {
     return NextResponse.json(
-      { success: false, error: "Redis is not configured (missing UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN)" },
+      { success: false, error: "Redis is not configured (missing KV_REST_API_URL/TOKEN or UPSTASH_REDIS_REST_URL/TOKEN)" },
       { status: 500 }
     );
   }

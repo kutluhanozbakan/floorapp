@@ -8,8 +8,11 @@ let client: Redis | null = null;
 export function getRedis(): Redis | null {
   if (client) return client;
 
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  // Accept whichever REST credentials are present. Vercel's managed Redis
+  // (Upstash under the hood) injects KV_REST_API_* via the Storage/Marketplace
+  // integration; a standalone Upstash DB uses UPSTASH_REDIS_REST_*.
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
   if (!url || !token) return null;
 
   client = new Redis({ url, token });
