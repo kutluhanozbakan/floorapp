@@ -2,7 +2,7 @@
 
 import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Grid, SoftShadows } from "@react-three/drei";
+import { Grid } from "@react-three/drei";
 import CameraController from "./CameraController";
 import RoomGroup from "./RoomGroup";
 import CanvasTools from "./CanvasTools";
@@ -35,7 +35,6 @@ export default function PlannerCanvas() {
         <Suspense fallback={null}>
           <CameraController />
           <color attach="background" args={["#f4f2ed"]} />
-          <SoftShadows size={26} samples={12} focus={0.8} />
           <hemisphereLight args={["#fcfbf7", "#d8d2c4", 0.55]} />
           <ambientLight intensity={0.35} />
           <directionalLight
