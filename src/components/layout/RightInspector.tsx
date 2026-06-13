@@ -3,7 +3,8 @@ import React, { useRef, useState } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import { IconButton, Input } from "@/components/ui";
 import { cn } from "@/utils/cn";
-import { X, Lock, Unlock, RotateCw, Copy, Trash2, ChevronDown } from "lucide-react";
+import { X, Lock, Unlock, RotateCw, Copy, Trash2, ChevronDown, Check } from "lucide-react";
+import { DEFAULT_WALL_COLOR } from "@/components/planner/Walls";
 
 export default function RightInspector() {
   const {
@@ -87,6 +88,11 @@ export default function RightInspector() {
             <Input label="Duvar Yüksekliği" unit="m" type="number" min={1} max={10} step={0.1}
               value={selectedRoom.wallHeight.toFixed(2)}
               onChange={(e) => editRoom(selectedRoom.id, { wallHeight: parseFloat(e.target.value) || 1 })} />
+
+            <WallColorField
+              value={selectedRoom.wallColor ?? DEFAULT_WALL_COLOR}
+              onPick={(color) => editRoom(selectedRoom.id, { wallColor: color })}
+            />
 
             {/* Advanced */}
             <Collapsible open={advancedOpen} onToggle={() => setAdvancedOpen((v) => !v)} label="Gelişmiş">
@@ -191,6 +197,76 @@ function Summary({ value, label }: { value: number; label: string }) {
     <div>
       <div className="text-2xl font-semibold text-ink tabular-nums">{value}</div>
       <div className="text-xs text-ink-muted">{label}</div>
+    </div>
+  );
+}
+
+// Curated "Calm Spatial Studio" wall tones + a custom picker.
+const WALL_SWATCHES = [
+  DEFAULT_WALL_COLOR, // warm white
+  "#e6ddcd", // kum
+  "#dfe6df", // adaçayı sis
+  "#d7e2e8", // buz mavisi
+  "#ece0dd", // pudra
+  "#cdd6cb", // yeşil gri
+  "#c9b8a5", // taupe
+  "#aeb7ab", // koyu adaçayı
+  "#b9c7d0", // mavi gri
+  "#5b6b60", // koyu vurgu
+];
+
+function WallColorField({ value, onPick }: { value: string; onPick: (color: string) => void }) {
+  const current = value.toLowerCase();
+  const isPreset = WALL_SWATCHES.some((c) => c.toLowerCase() === current);
+  return (
+    <div>
+      <label className="block text-xs font-medium text-ink-muted mb-2">Duvar Rengi</label>
+      <div className="flex flex-wrap gap-2">
+        {WALL_SWATCHES.map((color) => {
+          const selected = color.toLowerCase() === current;
+          return (
+            <button
+              key={color}
+              type="button"
+              onClick={() => onPick(color)}
+              aria-label={`Duvar rengi ${color}`}
+              aria-pressed={selected}
+              title={color}
+              className={cn(
+                "relative w-7 h-7 rounded-full border border-line/70 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-surface-raised",
+                selected && "ring-2 ring-brand ring-offset-2 ring-offset-surface-raised"
+              )}
+              style={{ backgroundColor: color }}
+            >
+              {selected && (
+                <Check className="absolute inset-0 m-auto w-3.5 h-3.5 text-ink/70" strokeWidth={3} />
+              )}
+            </button>
+          );
+        })}
+
+        {/* Custom colour picker */}
+        <label
+          title="Özel renk"
+          className={cn(
+            "relative w-7 h-7 rounded-full border border-line/70 cursor-pointer overflow-hidden transition-transform hover:scale-110",
+            !isPreset && "ring-2 ring-brand ring-offset-2 ring-offset-surface-raised"
+          )}
+          style={{
+            background: isPreset
+              ? "conic-gradient(from 0deg, #ef4444, #eab308, #22c55e, #3b82f6, #a855f7, #ef4444)"
+              : value,
+          }}
+        >
+          <input
+            type="color"
+            value={value}
+            onChange={(e) => onPick(e.target.value)}
+            className="absolute inset-0 opacity-0 cursor-pointer"
+            aria-label="Özel duvar rengi seç"
+          />
+        </label>
+      </div>
     </div>
   );
 }

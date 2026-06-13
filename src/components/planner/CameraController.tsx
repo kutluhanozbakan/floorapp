@@ -9,11 +9,29 @@ export default function CameraController() {
   const { size } = useThree();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const controlsRef = useRef<any>(null);
+  // Keep the latest canvas size in a ref so the "fit" command can read it
+  // without `size` being an effect dependency — otherwise a resize would
+  // re-fire the last view command and snap the camera back unexpectedly.
+  const sizeRef = useRef(size);
+  useEffect(() => {
+    sizeRef.current = size;
+  }, [size]);
 
   // Pause camera controls while a furniture item is being dragged.
   useEffect(() => {
-    if (controlsRef.current) {
-      controlsRef.current.enabled = !isDraggingItem;
+    const controls = controlsRef.current;
+    if (!controls) return;
+    controls.enabled = !isDraggingItem;
+    // When a drag starts, kill any leftover orbit momentum from `enableDamping`.
+    // Otherwise OrbitControls keeps applying its decaying spherical delta every
+    // frame (update() runs even while disabled), so the camera would keep
+    // gliding/rotating during the drag — read by users as the view "resetting"
+    // whenever they move an object. Toggling damping off for one update() snaps
+    // the residual delta to zero; we restore it immediately for normal orbiting.
+    if (isDraggingItem && controls.enableDamping) {
+      controls.enableDamping = false;
+      controls.update();
+      controls.enableDamping = true;
     }
   }, [isDraggingItem]);
 
@@ -97,7 +115,8 @@ export default function CameraController() {
       controls.target.set(cx, 0, cz);
       if (currentMode === "2d" && cam.isOrthographicCamera) {
         // zoom = pixels per world unit; fit both axes, keep a margin.
-        const zoom = Math.min(size.width / sizeX, size.height / sizeZ) * 0.9;
+        const { width: vw, height: vh } = sizeRef.current;
+        const zoom = Math.min(vw / sizeX, vh / sizeZ) * 0.9;
         cam.zoom = THREE.MathUtils.clamp(zoom, 5, 400);
         cam.position.set(cx, 20, cz);
         cam.updateProjectionMatrix();
@@ -108,7 +127,7 @@ export default function CameraController() {
       cam.lookAt(cx, 0, cz);
       controls.update();
     }
-  }, [viewTick, currentMode, size, applyDefaultView]);
+  }, [viewTick, currentMode, applyDefaultView]);
 
   return (
     <>

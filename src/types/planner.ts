@@ -6,6 +6,7 @@ export type Room = {
   depth: number;
   wallHeight: number;
   wallThickness: number;
+  wallColor?: string;
   isLocked?: boolean;
 };
 
